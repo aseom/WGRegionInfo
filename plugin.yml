@@ -1,4 +1,4 @@
 name: WGRegionInfo
 main: net.aseom.mc.wgregioninfo.WGRegionInfo
 version: 1.0
-depend: [WorldGuard, WGRegionEvents]
+depend: [WorldGuard, WGRegionEvents, WGCustomFlags]
