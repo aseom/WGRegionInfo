@@ -49,7 +49,6 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 			title.setTimingsToTicks();
 			title.send(player);
 		}
-//		ActionBarAPI.sendActionBar(player, region.getId());
 	}
 	
 	@EventHandler

@@ -16,7 +16,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 public class Config {
 	private final WGRegionInfo main;
-	private final String defaultRegionConfig
+	private final String defaultRegionRules
 		= "# Region Configuration\r\n"
 		+ "#\r\n"
 		+ "# Region ID가 'spawn' 또는 'shop'인 곳에 유저가 들어갈 때\r\n"
@@ -27,35 +27,35 @@ public class Config {
 		+ "    - spawn\r\n"
 		+ "    - shop\r\n"
 		+ "  greet-title: \"Welcome!\"\r\n";
-	private File regionConfigFile;
-	public YamlConfiguration rgConf;
+	private File regionRulesFile;
+	public YamlConfiguration rgRules;
 	
 	public Config(WGRegionInfo wgRegInf) {
 		main = wgRegInf;
-		this.rgConf = loadRegionConfig();
+		this.rgRules = loadRegionRules();
 	}
 	
 	public String getGreetTitle(ProtectedRegion region) {
-		Set<String> ruleIds = rgConf.getKeys(false);
+		Set<String> ruleIds = rgRules.getKeys(false);
 		for (String eachRule : ruleIds) {
-			List<String> regionIdList = rgConf.getStringList(eachRule + ".region-ids");
+			List<String> regionIdList = rgRules.getStringList(eachRule + ".region-ids");
 			if (regionIdList.contains(region.getId())) {
-				return rgConf.getString(eachRule + ".greet-title");
+				return rgRules.getString(eachRule + ".greet-title");
 			}
 		}
 		return null;
 	}
 
-	public YamlConfiguration loadRegionConfig() {
-		this.regionConfigFile = new File(main.getDataFolder(), "region-config.yml");
-		// config 파일이 없으면 새로 만든다.
-		if (!regionConfigFile.exists()) {
-			createDefaultRegionConfig();
+	public YamlConfiguration loadRegionRules() {
+		this.regionRulesFile = new File(main.getDataFolder(), "region-rules.yml");
+		// rules 파일이 없으면 새로 만든다.
+		if (!regionRulesFile.exists()) {
+			createDefaultRegionRules();
 		}
 		
-		YamlConfiguration regionConfig = new YamlConfiguration();
+		YamlConfiguration regionRules = new YamlConfiguration();
 		try {
-			regionConfig.load(regionConfigFile);
+			regionRules.load(regionRulesFile);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -64,17 +64,17 @@ public class Config {
 			e.printStackTrace();
 		}
 		
-		return regionConfig;
+		return regionRules;
 	}
 	
-	public void createDefaultRegionConfig() {
+	public void createDefaultRegionRules() {
 		// 데이터 폴더 없으면 생성
 		if (!main.getDataFolder().exists()) {
 			main.getDataFolder().mkdirs();
 		}
 		try {
-			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(regionConfigFile), "UTF-8"));
-			writer.write(defaultRegionConfig);
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(regionRulesFile), "UTF-8"));
+			writer.write(defaultRegionRules);
 			writer.close();
 		} catch (IOException e) {
 			e.printStackTrace();
