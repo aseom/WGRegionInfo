@@ -1,11 +1,5 @@
 package net.aseom.mc.wgregioninfo;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.ConsoleCommandSender;
@@ -26,20 +20,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 public class WGRegionInfo extends JavaPlugin implements Listener {
 	private WorldGuardPlugin WorldGuard;
-	private File regionConfig;
-	private String defaultRegionConfig = "# Region Configuration\r\n"
-									   + "#\r\n"
-									   + "# filter-type은 ID, OWNER, MEMBER 세가지 값중 하나여야 합니다.\r\n"
-									   + "#\r\n"
-									   + "# Region ID가 'spawn' 또는 'shop'인 곳에 유저가 들어갈 때\r\n"
-									   + "# 정보 패널을 표시하지 않도록 하고, \"Welcome!\" 타이틀을 띄우고 싶다면\r\n"
-									   + "# 이렇게 설정하면 됩니다:\r\n"
-									   + "\r\n"
-									   + "example:\r\n"
-									   + "  filter-type: ID\r\n"
-									   + "  filter: [spawn, shop]\r\n"
-									   + "  greet-title: \"Welcome to Example Region!\"\r\n"
-									   + "  show-info-panel: true\r\n";
+	private Config Config;
 
 	@Override
 	public void onEnable() {
@@ -47,7 +28,7 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		//TODO 의존 플러그인 존재하지 않는 경우도 처리
 		this.WorldGuard = (WorldGuardPlugin) plugMgr.getPlugin("WorldGuard");
 		
-		loadRegionConfig();
+		this.Config = new Config(this);
 		plugMgr.registerEvents(this, this);
 		
 		ConsoleCommandSender console = getServer().getConsoleSender();
@@ -62,7 +43,7 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		Scoreboard scoreBoard = getRegionInfoBoard(region);
 		player.setScoreboard(scoreBoard);
 		
-		String greetTitle = "TEST";
+		String greetTitle = Config.getGreetTitle(region);
 		if (greetTitle != null) {
 			Title title = new Title("", greetTitle, 10, 20, 10);
 			title.setTimingsToTicks();
@@ -75,28 +56,6 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 	public void onRegionLeave(RegionLeaveEvent event) {
 		Scoreboard blankBoard = Bukkit.getScoreboardManager().getNewScoreboard();
 		event.getPlayer().setScoreboard(blankBoard);
-	}
-	
-	public void loadRegionConfig() {
-		this.regionConfig = new File(getDataFolder(), "region-config.yml");
-		// config 파일이 없으면 새로 만든다.
-		if (!regionConfig.exists()) {
-			createDefaultRegionConfig();
-		}
-	}
-	
-	public void createDefaultRegionConfig() {
-		// 데이터 폴더 없으면 생성
-		if (!getDataFolder().exists()) {
-			getDataFolder().mkdirs();
-		}
-		try {
-			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(regionConfig), "UTF-8"));
-			writer.write(defaultRegionConfig);
-			writer.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 	public Scoreboard getRegionInfoBoard(ProtectedRegion region) {
