@@ -25,8 +25,18 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 	@Override
 	public void onEnable() {
 		PluginManager plugMgr = getServer().getPluginManager();
-		//TODO 의존 플러그인 존재하지 않는 경우도 처리
+		
 		this.WorldGuard = (WorldGuardPlugin) plugMgr.getPlugin("WorldGuard");
+		if (WorldGuard == null) {
+			getLogger().warning("WorldGuard plugin not found. Disabling plugin.");
+			plugMgr.disablePlugin(this);
+			return;
+		}
+		if (!plugMgr.isPluginEnabled("WGRegionEvents")) {
+			getLogger().warning("WGRegionEvents dependency not found. Disabling plugin.");
+			plugMgr.disablePlugin(this);
+			return;
+		}
 		
 		this.Config = new Config(this);
 		plugMgr.registerEvents(this, this);
@@ -43,7 +53,7 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		Scoreboard scoreBoard = getRegionInfoBoard(region);
 		player.setScoreboard(scoreBoard);
 		
-		String greetTitle = Config.getGreetTitle(region);
+		String greetTitle = Config.getRegionConfig("greet-title", region);
 		if (greetTitle != null) {
 			Title title = new Title("", greetTitle, 10, 20, 10);
 			title.setTimingsToTicks();
@@ -53,8 +63,18 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 	
 	@EventHandler
 	public void onRegionLeave(RegionLeaveEvent event) {
+		Player player = event.getPlayer();
+		ProtectedRegion region = event.getRegion();
+		
 		Scoreboard blankBoard = Bukkit.getScoreboardManager().getNewScoreboard();
 		event.getPlayer().setScoreboard(blankBoard);
+
+		String greetTitle = Config.getRegionConfig("bye-title", region);
+		if (greetTitle != null) {
+			Title title = new Title("", greetTitle, 10, 20, 10);
+			title.setTimingsToTicks();
+			title.send(player);
+		}
 	}
 
 	public Scoreboard getRegionInfoBoard(ProtectedRegion region) {

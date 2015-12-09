@@ -26,7 +26,8 @@ public class Config {
 		+ "  region-ids:\r\n"
 		+ "    - spawn\r\n"
 		+ "    - shop\r\n"
-		+ "  greet-title: \"Welcome!\"\r\n";
+		+ "  greet-title: \"Welcome!\"\r\n"
+		+ "  bye-title: \"Goodbye!\"\r\n";
 	private File regionRulesFile;
 	public YamlConfiguration rgRules;
 	
@@ -35,12 +36,12 @@ public class Config {
 		this.rgRules = loadRegionRules();
 	}
 	
-	public String getGreetTitle(ProtectedRegion region) {
+	public String getRegionConfig(String type, ProtectedRegion region) {
 		Set<String> ruleIds = rgRules.getKeys(false);
 		for (String eachRule : ruleIds) {
 			List<String> regionIdList = rgRules.getStringList(eachRule + ".region-ids");
 			if (regionIdList.contains(region.getId())) {
-				return rgRules.getString(eachRule + ".greet-title");
+				return rgRules.getString(eachRule + "." + type);
 			}
 		}
 		return null;
