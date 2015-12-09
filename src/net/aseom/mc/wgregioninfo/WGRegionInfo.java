@@ -69,9 +69,9 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		Scoreboard blankBoard = Bukkit.getScoreboardManager().getNewScoreboard();
 		event.getPlayer().setScoreboard(blankBoard);
 
-		String greetTitle = Config.getRegionConfig("bye-title", region);
-		if (greetTitle != null) {
-			Title title = new Title("", greetTitle, 10, 20, 10);
+		String byeTitle = Config.getRegionConfig("bye-title", region);
+		if (byeTitle != null) {
+			Title title = new Title("", byeTitle, 10, 20, 10);
 			title.setTimingsToTicks();
 			title.send(player);
 		}
