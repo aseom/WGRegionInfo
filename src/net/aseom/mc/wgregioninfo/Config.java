@@ -17,7 +17,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 public class Config {
 	private final WGRegionInfo main;
 	private final String defaultRegionRules
-		= "# Region Configuration\r\n"
+		= "# Region Rules\r\n"
 		+ "#\r\n"
 		+ "# Region ID가 'spawn' 또는 'shop'인 곳에 유저가 들어갈 때\r\n"
 		+ "# \"Welcome!\" 타이틀을 띄우고 싶다면 이렇게 설정하면 됩니다.\r\n"
