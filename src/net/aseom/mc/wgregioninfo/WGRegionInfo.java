@@ -39,6 +39,7 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		}
 		
 		this.Config = new Config(this);
+		getCommand("regioninfo").setExecutor(new RgInfoCommand());
 		plugMgr.registerEvents(this, this);
 		
 		ConsoleCommandSender console = getServer().getConsoleSender();
@@ -76,7 +77,7 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 			title.send(player);
 		}
 	}
-
+	
 	public Scoreboard getRegionInfoBoard(ProtectedRegion region) {
 		String[] ownerName = getUsersName(region.getOwners());
 		String[] memberName = getUsersName(region.getMembers());

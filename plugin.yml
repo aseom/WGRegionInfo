@@ -2,3 +2,8 @@ name: WGRegionInfo
 main: net.aseom.mc.wgregioninfo.WGRegionInfo
 version: 1.0
 softdepend: [WorldGuard, WGRegionEvents]
+
+commands:
+  regioninfo:
+    description: "WG RegionInfo Command."
+    usage: "/regioninfo <addrule|...>"
