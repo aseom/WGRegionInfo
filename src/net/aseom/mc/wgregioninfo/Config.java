@@ -11,6 +11,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 public class Config {
 	private final WGRegionInfo main;
+	//TODO: 설정 변경시 한글주석 사라지는 issue
 	private final String defaultRegionRules
 		= "# Region Rules\r\n"
 		+ "#\r\n"
