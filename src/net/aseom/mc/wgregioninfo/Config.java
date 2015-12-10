@@ -6,13 +6,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.List;
-import java.util.Set;
-
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
-
-import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 public class Config {
 	private final WGRegionInfo main;
@@ -28,35 +23,20 @@ public class Config {
 		+ "    - shop\r\n"
 		+ "  greet-title: \"Welcome!\"\r\n"
 		+ "  bye-title: \"Goodbye!\"\r\n";
-	private File regionRulesFile;
-	public YamlConfiguration rgRules;
+	public static File rgRulesFile;
+	public static YamlConfiguration rgRules;
 	
 	public Config(WGRegionInfo wgRegInf) {
 		main = wgRegInf;
-		this.rgRules = loadRegionRules();
-	}
-	
-	public String getRegionConfig(String type, ProtectedRegion region) {
-		Set<String> ruleIds = rgRules.getKeys(false);
-		for (String eachRule : ruleIds) {
-			List<String> regionIdList = rgRules.getStringList(eachRule + ".region-ids");
-			if (regionIdList.contains(region.getId())) {
-				return rgRules.getString(eachRule + "." + type);
-			}
-		}
-		return null;
 	}
 
-	public YamlConfiguration loadRegionRules() {
-		this.regionRulesFile = new File(main.getDataFolder(), "region-rules.yml");
-		// rules 파일이 없으면 새로 만든다.
-		if (!regionRulesFile.exists()) {
-			createDefaultRegionRules();
-		}
+	public void loadRegionRules() {
+		rgRulesFile = new File(main.getDataFolder(), "region-rules.yml");
+		if (!rgRulesFile.exists()) createDefaultRegionRules();
 		
-		YamlConfiguration regionRules = new YamlConfiguration();
 		try {
-			regionRules.load(regionRulesFile);
+			rgRules = new YamlConfiguration();
+			rgRules.load(rgRulesFile);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -64,8 +44,6 @@ public class Config {
 		} catch (InvalidConfigurationException e) {
 			e.printStackTrace();
 		}
-		
-		return regionRules;
 	}
 	
 	public void createDefaultRegionRules() {
@@ -74,7 +52,7 @@ public class Config {
 			main.getDataFolder().mkdirs();
 		}
 		try {
-			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(regionRulesFile), "UTF-8"));
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rgRulesFile), "UTF-8"));
 			writer.write(defaultRegionRules);
 			writer.close();
 		} catch (IOException e) {

@@ -1,5 +1,8 @@
 package net.aseom.mc.wgregioninfo;
 
+import java.io.IOException;
+import java.util.ArrayList;
+
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -33,17 +36,36 @@ public class RgInfoCommand implements CommandExecutor {
 	}
 	
 	private void runAddGroupCmd(CommandSender sender, String[] args) {
+		String groupName = args[1];
 		if (args.length > 2) {
-			sender.sendMessage("group name not allow using space!");
+			sender.sendMessage("group name cannot contain space!");
 			return;
 		}
-		String groupName = args[1];
-		//TODO: Add group
+		Config.rgRules.createSection(groupName).set("region-ids", new ArrayList<String>());
+		try {
+			Config.rgRules.save(Config.rgRulesFile);
+		} catch (IOException e) {
+			sender.sendMessage("Error: Can't save config!");
+			e.printStackTrace();
+		}
 	}
 
 	private void runDelGroupCmd(CommandSender sender, String[] args) {
 		String groupName = args[1];
-		//TODO: Delete group
-		//TODO: If (args.length > 2 || group not found) Error
+		if (args.length > 2) {
+			sender.sendMessage("group name does not contain space!");
+			return;
+		}
+		if (!Config.rgRules.getKeys(false).contains(groupName)) {
+			sender.sendMessage("Group \"" + groupName + "\" not found!");
+			return;
+		}
+		Config.rgRules.set(groupName, null);
+		try {
+			Config.rgRules.save(Config.rgRulesFile);
+		} catch (IOException e) {
+			sender.sendMessage("Error: Can't save config!");
+			e.printStackTrace();
+		}
 	}
 }

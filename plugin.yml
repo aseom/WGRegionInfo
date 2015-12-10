@@ -6,4 +6,4 @@ softdepend: [WorldGuard, WGRegionEvents]
 commands:
   regioninfo:
     description: "WG RegionInfo Command."
-    usage: "/regioninfo <addrule|...>"
+    usage: "/regioninfo <addgroup|delgroup> <params>"
