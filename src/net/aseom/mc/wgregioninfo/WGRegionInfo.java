@@ -21,6 +21,8 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.domains.DefaultDomain;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
+//TODO: "/regioninfo help" command
+
 public class WGRegionInfo extends JavaPlugin implements Listener {
 	private WorldGuardPlugin WorldGuard;
 
