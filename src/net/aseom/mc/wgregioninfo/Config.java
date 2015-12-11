@@ -11,19 +11,18 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 public class Config {
 	private final WGRegionInfo main;
-	//TODO: 설정 변경시 한글주석 사라지는 issue
 	private final String defaultRegionRules
-		= "# Region Rules\r\n"
-		+ "#\r\n"
-		+ "# Region ID가 'spawn' 또는 'shop'인 곳에 유저가 들어갈 때\r\n"
-		+ "# \"Welcome!\" 타이틀을 띄우고 싶다면 이렇게 설정하면 됩니다.\r\n"
-		+ "\r\n"
-		+ "example-rule:\r\n"
-		+ "  region-ids:\r\n"
-		+ "    - spawn\r\n"
-		+ "    - shop\r\n"
-		+ "  greet-title: \"Welcome!\"\r\n"
-		+ "  bye-title: \"Goodbye!\"\r\n";
+		= "regions:\r\n"
+		+ "  example-region:\r\n"
+		+ "    greet-title: \"Welcome!\"\r\n"
+		+ "    bye-title: \"Goodbye!\"\r\n"
+		+ "groups:\r\n"
+		+ "  example-group:\r\n"
+		+ "    region-ids:\r\n"
+		+ "      - spawn\r\n"
+		+ "      - shop\r\n"
+		+ "    greet-title: \"Welcome!\"\r\n"
+		+ "    bye-title: \"Goodbye!\"\r\n";
 	public static File rgRulesFile;
 	public static YamlConfiguration rgRules;
 	

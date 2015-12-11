@@ -21,8 +21,6 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.domains.DefaultDomain;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-//TODO: "/regioninfo help" command
-
 public class WGRegionInfo extends JavaPlugin implements Listener {
 	private WorldGuardPlugin WorldGuard;
 
@@ -83,11 +81,16 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 	}
 	
 	public String getRegionTitle(String type, ProtectedRegion region) {
-		Set<String> ruleIds = Config.rgRules.getKeys(false);
-		for (String eachRule : ruleIds) {
-			List<String> regionIdList = Config.rgRules.getStringList(eachRule + ".region-ids");
+		// Get by region
+		if (Config.rgRules.get("regions." + region.getId() + "." + type) != null)
+			return Config.rgRules.getString("regions." + region.getId() + "." + type);
+		// Get by group
+		Set<String> groupIDs = Config.rgRules.getConfigurationSection("groups").getKeys(false);
+		for (String aGroupID : groupIDs) {
+			List<String> regionIdList = Config.rgRules.getStringList("groups." + aGroupID + ".region-ids");
 			if (regionIdList.contains(region.getId())) {
-				return Config.rgRules.getString(eachRule + "." + type);
+				String title = Config.rgRules.getString("groups." + aGroupID + "." + type);
+				if (title != null) return title;
 			}
 		}
 		return null;
