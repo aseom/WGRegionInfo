@@ -11,7 +11,6 @@ import org.bukkit.command.CommandSender;
 
 //TODO: "/regioninfo help" command
 //TODO: "Group|Region ~ not exist. Nothing to remove." Message
-//TODO: regions와 groups에 title conf 중복되는 경우 처리
 
 public class RgInfoCommand implements CommandExecutor {
 
@@ -145,17 +144,20 @@ public class RgInfoCommand implements CommandExecutor {
 	
 	private void runGroupTitleCmd(String greetOrBye, CommandSender sender, String[] args) throws IOException {
 		String groupName = args[1];
-		String[] splitedText = Arrays.copyOfRange(args, 3, args.length);
+		String text = combineStrArr(Arrays.copyOfRange(args, 3, args.length));
 		
 		if (!Config.rgRules.getConfigurationSection("groups").getKeys(false).contains(groupName)) {
 			sender.sendMessage("Group \"" + groupName + "\" not found!");
 			return;
 		}
 		
-		if (splitedText.length > 0) {
+		if (text != "") {
 			// Add
-			String combinedText = combineArgsToString(splitedText);
-			Config.rgRules.set("groups." + groupName + "." + greetOrBye + "-title", combinedText);
+			List<String> regionIDs = Config.rgRules.getStringList("groups." + groupName + ".region-ids");
+			for (String each : regionIDs) {
+				Config.rmConflictRgConf(greetOrBye + "-title", each);
+			}
+			Config.rgRules.set("groups." + groupName + "." + greetOrBye + "-title", text);
 		} else {
 			// Remove
 			Config.rgRules.set("groups." + groupName + "." + greetOrBye + "-title", null);
@@ -165,18 +167,16 @@ public class RgInfoCommand implements CommandExecutor {
 	
 	private void runTitleCmd(String greetOrBye, CommandSender sender, String[] args) throws IOException {
 		String regionID = args[1];
-		String[] splitedText = Arrays.copyOfRange(args, 3, args.length);
+		String text = combineStrArr(Arrays.copyOfRange(args, 3, args.length));
 		
-		if (splitedText.length > 0) {
+		if (text != "") {
 			// Add
-			String combinedText = combineArgsToString(splitedText);
-			Config.rgRules.set("regions." + regionID + "." + greetOrBye + "-title", combinedText);
+			Config.rmConflictRgConf(greetOrBye + "-title", regionID);
+			Config.rgRules.set("regions." + regionID + "." + greetOrBye + "-title", text);
 		} else {
 			// Remove
 			Config.rgRules.set("regions." + regionID + "." + greetOrBye + "-title", null);
-			// 아무 설정도 안남으면 해당 region 섹션 삭제
-			if (Config.rgRules.getConfigurationSection("regions." + regionID).getKeys(false).size() == 0)
-				Config.rgRules.set("regions." + regionID, null);
+			Config.cleanupRgConfSection(regionID);
 		}
 		Config.rgRules.save(Config.rgRulesFile);
 	}
@@ -185,7 +185,7 @@ public class RgInfoCommand implements CommandExecutor {
 	 * 띄어쓰기 포함 텍스트가 배열로 쪼개진 것 다시 합침
 	 * @return String Combined text
 	 */
-	public String combineArgsToString(String[] splitedText) {
+	public String combineStrArr(String[] splitedText) {
 		String combinedText = "";
 		for (String each : splitedText) {
 			combinedText += each + " ";

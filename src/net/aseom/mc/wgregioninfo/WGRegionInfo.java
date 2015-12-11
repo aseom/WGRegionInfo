@@ -1,8 +1,5 @@
 package net.aseom.mc.wgregioninfo;
 
-import java.util.List;
-import java.util.Set;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.ConsoleCommandSender;
@@ -56,9 +53,9 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		Scoreboard scoreBoard = getRegionInfoBoard(region);
 		player.setScoreboard(scoreBoard);
 		
-		String greetTitle = getRegionTitle("greet-title", region);
-		if (greetTitle != null) {
-			Title title = new Title("", greetTitle, 10, 20, 10);
+		String greetCfgPath = Config.checkRgConf("greet-title", region.getId());
+		if(greetCfgPath != null) {
+			Title title = new Title("", Config.rgRules.getString(greetCfgPath), 10, 20, 10);
 			title.setTimingsToTicks();
 			title.send(player);
 		}
@@ -72,28 +69,12 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		Scoreboard blankBoard = Bukkit.getScoreboardManager().getNewScoreboard();
 		event.getPlayer().setScoreboard(blankBoard);
 
-		String byeTitle = getRegionTitle("bye-title", region);
-		if (byeTitle != null) {
-			Title title = new Title("", byeTitle, 10, 20, 10);
+		String byeCfgPath = Config.checkRgConf("bye-title", region.getId());
+		if(byeCfgPath != null) {
+			Title title = new Title("", Config.rgRules.getString(byeCfgPath), 10, 20, 10);
 			title.setTimingsToTicks();
 			title.send(player);
 		}
-	}
-	
-	public String getRegionTitle(String type, ProtectedRegion region) {
-		// Get by region
-		if (Config.rgRules.get("regions." + region.getId() + "." + type) != null)
-			return Config.rgRules.getString("regions." + region.getId() + "." + type);
-		// Get by group
-		Set<String> groupIDs = Config.rgRules.getConfigurationSection("groups").getKeys(false);
-		for (String aGroupID : groupIDs) {
-			List<String> regionIdList = Config.rgRules.getStringList("groups." + aGroupID + ".region-ids");
-			if (regionIdList.contains(region.getId())) {
-				String title = Config.rgRules.getString("groups." + aGroupID + "." + type);
-				if (title != null) return title;
-			}
-		}
-		return null;
 	}
 	
 	public Scoreboard getRegionInfoBoard(ProtectedRegion region) {

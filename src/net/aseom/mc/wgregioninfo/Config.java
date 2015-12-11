@@ -6,6 +6,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.List;
+import java.util.Set;
+
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -58,5 +61,47 @@ public class Config {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	/**
+	 * Check existing region config, in Both of region/group specific rule
+	 * @return If the config already exist -> confPath, else -> null
+	 */
+	public static String checkRgConf(String confName, String rgName) {
+		String path;
+		
+		// Get by region
+		path = "regions." + rgName + "." + confName;
+		if (rgRules.get(path) != null) return path;
+		
+		// Get by group
+		Set<String> groupIDs = rgRules.getConfigurationSection("groups").getKeys(false);
+		for (String aGroupID : groupIDs) {
+			List<String> regionIdList = rgRules.getStringList("groups." + aGroupID + ".region-ids");
+			if (regionIdList.contains(rgName)) {
+				path = "groups." + aGroupID + "." + confName;
+				if (rgRules.getString(path) != null) return path;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Remove already existing region config, in Both of region/group specific rule
+	 */
+	public static void rmConflictRgConf(String confName, String regionID) {
+		String existingConfPath = checkRgConf(confName, regionID);
+		if (existingConfPath != null) {
+			rgRules.set(existingConfPath, null);
+			if (existingConfPath.startsWith("regions.")) cleanupRgConfSection(regionID);
+		}
+	}
+
+	/**
+	 * If no config left, Remove ConfigSection in region specific rule
+	 */
+	public static void cleanupRgConfSection(String regionID) {
+		if (rgRules.getConfigurationSection("regions." + regionID).getKeys(false).size() == 0)
+			rgRules.set("regions." + regionID, null);
 	}
 }
