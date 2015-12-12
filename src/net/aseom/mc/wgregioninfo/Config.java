@@ -64,6 +64,33 @@ public class Config {
 	}
 	
 	/**
+	 * Get group name that contained the region 
+	 * @return Group name
+	 */
+	public static String getGroup(String regionID) {
+		Set<String> groupIDs = rgRules.getConfigurationSection("groups").getKeys(false);
+		for (String aGroupID : groupIDs) {
+			List<String> regionIdList = rgRules.getStringList("groups." + aGroupID + ".region-ids");
+			if (regionIdList.contains(regionID)) {
+				return aGroupID;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Copy group specific rule to region specific rule
+	 */
+	public static void moveGroupCfgToRg(String regionID, String group) {
+		String[] confs = {"greet-title", "bye-title"};
+		for (String confName : confs) {
+			String str = rgRules.getString("groups." + group + "." + confName);
+			if (str != null) rgRules.set("regions." + regionID + "." + confName, str);
+		}
+		rgRules.getList("groups." + group + ".region-ids").remove(regionID);
+	}
+	
+	/**
 	 * Check existing region config, in Both of region/group specific rule
 	 * @return If the config already exist -> confPath, else -> null
 	 */
@@ -84,17 +111,6 @@ public class Config {
 			}
 		}
 		return null;
-	}
-
-	/**
-	 * Remove already existing region config, in Both of region/group specific rule
-	 */
-	public static void rmConflictRgConf(String confName, String regionID) {
-		String existingConfPath = checkRgConf(confName, regionID);
-		if (existingConfPath != null) {
-			rgRules.set(existingConfPath, null);
-			if (existingConfPath.startsWith("regions.")) cleanupRgConfSection(regionID);
-		}
 	}
 
 	/**
