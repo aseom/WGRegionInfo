@@ -13,7 +13,7 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 public class Config {
-	private final WGRegionInfo main;
+	private final WGRegionInfo wgRegionInfo;
 	private final String defaultRegionRules
 		= "regions:\r\n"
 		+ "  example-region:\r\n"
@@ -22,19 +22,19 @@ public class Config {
 		+ "groups:\r\n"
 		+ "  example-group:\r\n"
 		+ "    region-ids:\r\n"
-		+ "      - spawn\r\n"
-		+ "      - shop\r\n"
+		+ "    - the_spawn_region\r\n"
+		+ "    - the_shop_region\r\n"
 		+ "    greet-title: \"Welcome!\"\r\n"
 		+ "    bye-title: \"Goodbye!\"\r\n";
 	public static File rgRulesFile;
 	public static YamlConfiguration rgRules;
 	
-	public Config(WGRegionInfo wgRegInf) {
-		main = wgRegInf;
+	public Config(WGRegionInfo wgRgI) {
+		wgRegionInfo = wgRgI;
 	}
 
 	public void loadRegionRules() {
-		rgRulesFile = new File(main.getDataFolder(), "region-rules.yml");
+		rgRulesFile = new File(wgRegionInfo.getDataFolder(), "region-rules.yml");
 		if (!rgRulesFile.exists()) createDefaultRegionRules();
 		
 		try {
@@ -50,9 +50,8 @@ public class Config {
 	}
 	
 	public void createDefaultRegionRules() {
-		// 데이터 폴더 없으면 생성
-		if (!main.getDataFolder().exists()) {
-			main.getDataFolder().mkdirs();
+		if (!wgRegionInfo.getDataFolder().exists()) {
+			wgRegionInfo.getDataFolder().mkdirs();
 		}
 		try {
 			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rgRulesFile), "UTF-8"));
@@ -68,11 +67,11 @@ public class Config {
 	 * @return Group name
 	 */
 	public static String getGroup(String regionID) {
-		Set<String> groupIDs = rgRules.getConfigurationSection("groups").getKeys(false);
-		for (String aGroupID : groupIDs) {
-			List<String> regionIdList = rgRules.getStringList("groups." + aGroupID + ".region-ids");
-			if (regionIdList.contains(regionID)) {
-				return aGroupID;
+		Set<String> groupNames = rgRules.getConfigurationSection("groups").getKeys(false);
+		for (String eGrpName : groupNames) {
+			List<String> rgIDs = rgRules.getStringList("groups." + eGrpName + ".region-ids");
+			if (rgIDs.contains(regionID)) {
+				return eGrpName;
 			}
 		}
 		return null;
@@ -81,42 +80,36 @@ public class Config {
 	/**
 	 * Copy group specific rule to region specific rule
 	 */
-	public static void moveGroupCfgToRg(String regionID, String group) {
+	public static void moveGroupRuleToRg(String regionID, String group) {
 		String[] confs = {"greet-title", "bye-title"};
-		for (String confName : confs) {
-			String str = rgRules.getString("groups." + group + "." + confName);
-			if (str != null) rgRules.set("regions." + regionID + "." + confName, str);
+		for (String eConf : confs) {
+			String str = rgRules.getString("groups." + group + "." + eConf);
+			if (str != null) rgRules.set("regions." + regionID + "." + eConf, str);
 		}
 		rgRules.getList("groups." + group + ".region-ids").remove(regionID);
 	}
 	
 	/**
-	 * Check existing region config, in Both of region/group specific rule
-	 * @return If the config already exist -> confPath, else -> null
+	 * Get region rule, in both of region/group specific rule
+	 * @return The rule
 	 */
-	public static String checkRgConf(String confName, String rgName) {
-		String path;
+	public static String getRegionRule(String ruleName, String regionID) {
 		
-		// Get by region
-		path = "regions." + rgName + "." + confName;
-		if (rgRules.get(path) != null) return path;
+		// Get by region 1st
+		String regionRule = rgRules.getString("regions." + regionID + "." + ruleName);
+		if (regionRule != null) return regionRule;
 		
-		// Get by group
-		Set<String> groupIDs = rgRules.getConfigurationSection("groups").getKeys(false);
-		for (String aGroupID : groupIDs) {
-			List<String> regionIdList = rgRules.getStringList("groups." + aGroupID + ".region-ids");
-			if (regionIdList.contains(rgName)) {
-				path = "groups." + aGroupID + "." + confName;
-				if (rgRules.getString(path) != null) return path;
-			}
-		}
+		// Get by group 2nd
+		String groupRule = rgRules.getString("groups." + getGroup(regionID) + "." + ruleName);
+		if (groupRule != null) return groupRule;
+
 		return null;
 	}
 
 	/**
-	 * If no config left, Remove ConfigSection in region specific rule
+	 * If no rule left, Remove ConfigSection of the region in region specific rule
 	 */
-	public static void cleanupRgConfSection(String regionID) {
+	public static void cleanupRgSpeciRule(String regionID) {
 		if (rgRules.getConfigurationSection("regions." + regionID).getKeys(false).size() == 0)
 			rgRules.set("regions." + regionID, null);
 	}

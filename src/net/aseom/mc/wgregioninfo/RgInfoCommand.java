@@ -23,12 +23,13 @@ public class RgInfoCommand implements CommandExecutor {
 			if (!firstArgVaild) return false; // Show "/regioninfo" usage
 		} catch (IOException e) {
 			sender.sendMessage("Error: Can't save config!");
+			e.printStackTrace();
 		}
 		return true;
 	}
 	
 	/**
-	 * @return Boolean First argument vaild or unvaild
+	 * @return First argument vaild or unvaild
 	 * @throws IOException Config save fail
 	 */
 	public boolean cmdHandling(CommandSender sender, String[] args) throws IOException {
@@ -178,26 +179,26 @@ public class RgInfoCommand implements CommandExecutor {
 			// The region exists in group rule, move to region rule
 			String group = Config.getGroup(regionID);
 			if (group != null) {
-				Config.moveGroupCfgToRg(regionID, group);
+				Config.moveGroupRuleToRg(regionID, group);
 				sender.sendMessage("From now, region \"" + regionID + "\" not in group \"" + group + "\"");
 			}
 			Config.rgRules.set("regions." + regionID + "." + greetOrBye + "-title", text);
 		} else {
 			// Remove
 			Config.rgRules.set("regions." + regionID + "." + greetOrBye + "-title", null);
-			Config.cleanupRgConfSection(regionID);
+			Config.cleanupRgSpeciRule(regionID);
 		}
 		Config.rgRules.save(Config.rgRulesFile);
 	}
 
 	/**
 	 * 띄어쓰기 포함 텍스트가 배열로 쪼개진 것 다시 합침
-	 * @return String Combined text
+	 * @return Combined text
 	 */
-	public String combineStrArr(String[] splitedText) {
+	public String combineStrArr(String[] splitedTexts) {
 		String combinedText = "";
-		for (String each : splitedText) {
-			combinedText += each + " ";
+		for (String eSplText : splitedTexts) {
+			combinedText += eSplText + " ";
 		}
 		combinedText = combinedText.trim();
 		//TODO: Escape " char, \ char

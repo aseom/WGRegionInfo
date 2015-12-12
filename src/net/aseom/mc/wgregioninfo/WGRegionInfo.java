@@ -19,14 +19,14 @@ import com.sk89q.worldguard.domains.DefaultDomain;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 public class WGRegionInfo extends JavaPlugin implements Listener {
-	private WorldGuardPlugin WorldGuard;
+	private WorldGuardPlugin worldGuardPlugin;
 
 	@Override
 	public void onEnable() {
 		PluginManager plugMgr = getServer().getPluginManager();
 		
-		this.WorldGuard = (WorldGuardPlugin) plugMgr.getPlugin("WorldGuard");
-		if (WorldGuard == null) {
+		this.worldGuardPlugin = (WorldGuardPlugin) plugMgr.getPlugin("WorldGuard");
+		if (worldGuardPlugin == null) {
 			getLogger().warning("WorldGuard plugin not found. Disabling plugin.");
 			plugMgr.disablePlugin(this);
 			return;
@@ -53,9 +53,9 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		Scoreboard scoreBoard = getRegionInfoBoard(region);
 		player.setScoreboard(scoreBoard);
 		
-		String greetCfgPath = Config.checkRgConf("greet-title", region.getId());
-		if(greetCfgPath != null) {
-			Title title = new Title("", Config.rgRules.getString(greetCfgPath), 10, 20, 10);
+		String greetTitle = Config.getRegionRule("greet-title", region.getId());
+		if (greetTitle != null) {
+			Title title = new Title("", greetTitle, 10, 20, 10);
 			title.setTimingsToTicks();
 			title.send(player);
 		}
@@ -69,9 +69,9 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		Scoreboard blankBoard = Bukkit.getScoreboardManager().getNewScoreboard();
 		event.getPlayer().setScoreboard(blankBoard);
 
-		String byeCfgPath = Config.checkRgConf("bye-title", region.getId());
-		if(byeCfgPath != null) {
-			Title title = new Title("", Config.rgRules.getString(byeCfgPath), 10, 20, 10);
+		String byeTitle = Config.getRegionRule("bye-title", region.getId());
+		if (byeTitle != null) {
+			Title title = new Title("", byeTitle, 10, 20, 10);
 			title.setTimingsToTicks();
 			title.send(player);
 		}
@@ -91,23 +91,23 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		scroreObj.getScore(" - " + region.getId()).setScore(score--);
 		if (ownerName != null) {
 			scroreObj.getScore(ChatColor.GOLD + "Owners:").setScore(score--);
-			for (String each : ownerName) {
-				scroreObj.getScore(" - " + each).setScore(score--);
+			for (String eOwner : ownerName) {
+				scroreObj.getScore(" - " + eOwner).setScore(score--);
 			}
 		}
 		if (memberName != null) {
 			scroreObj.getScore(ChatColor.GOLD + "Members:").setScore(score--);
-			for (String each : memberName) {
-				scroreObj.getScore(" - " + each).setScore(score--);
+			for (String eMember : memberName) {
+				scroreObj.getScore(" - " + eMember).setScore(score--);
 			}
 		}
 		return scoreBoard;
 	}
 
 	public String[] getUsersName(DefaultDomain domain) {
-		String owners = domain.toPlayersString(WorldGuard.getProfileCache());
+		String owners = domain.toPlayersString(worldGuardPlugin.getProfileCache());
 		if (owners.length() == 0) return null;
-		String[] arrOwnerName = owners.replace("name:", "").toLowerCase().split(", ");
-		return arrOwnerName;
+		String[] ownerNames = owners.replace("name:", "").toLowerCase().split(", ");
+		return ownerNames;
 	}
 }
