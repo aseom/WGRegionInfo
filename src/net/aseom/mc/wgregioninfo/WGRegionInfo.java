@@ -19,7 +19,13 @@ import com.sk89q.worldguard.domains.DefaultDomain;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 public class WGRegionInfo extends JavaPlugin implements Listener {
+	public static WGRegionInfo plugin;
+	private Config config;
 	private WorldGuardPlugin worldGuardPlugin;
+	
+	public Config getConfigClass() {
+		return this.config;
+	}
 
 	@Override
 	public void onEnable() {
@@ -37,7 +43,10 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 			return;
 		}
 		
-		new Config(this).loadRegionRules();
+		plugin = this;
+		this.config = new Config();
+		config.loadRegionRules();
+		
 		getCommand("regioninfo").setExecutor(new RgInfoCommand());
 		plugMgr.registerEvents(this, this);
 		
@@ -53,7 +62,7 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		Scoreboard scoreBoard = getRegionInfoBoard(region);
 		player.setScoreboard(scoreBoard);
 		
-		String greetTitle = Config.getRegionRule("greet-title", region.getId());
+		String greetTitle = config.getRegionRule("greet-title", region.getId());
 		if (greetTitle != null) {
 			Title title = new Title("", greetTitle, 10, 20, 10);
 			title.setTimingsToTicks();
@@ -69,7 +78,7 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		Scoreboard blankBoard = Bukkit.getScoreboardManager().getNewScoreboard();
 		event.getPlayer().setScoreboard(blankBoard);
 
-		String byeTitle = Config.getRegionRule("bye-title", region.getId());
+		String byeTitle = config.getRegionRule("bye-title", region.getId());
 		if (byeTitle != null) {
 			Title title = new Title("", byeTitle, 10, 20, 10);
 			title.setTimingsToTicks();

@@ -14,6 +14,11 @@ import org.bukkit.configuration.ConfigurationSection;
 //TODO: "Group|Region ~ not exist. Nothing to remove." Message
 
 public class RgInfoCommand implements CommandExecutor {
+	private Config config;
+	
+	public RgInfoCommand() {
+		this.config = WGRegionInfo.plugin.getConfigClass();
+	}
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -92,8 +97,8 @@ public class RgInfoCommand implements CommandExecutor {
 			return;
 		}
 		
-		Config.rgRules.getConfigurationSection("groups").createSection(groupName).set("region-ids", new ArrayList<String>());
-		Config.rgRules.save(Config.rgRulesFile);
+		config.getRegionRulesConf().getConfigurationSection("groups").createSection(groupName).set("region-ids", new ArrayList<String>());
+		config.savaRegionRulesConf();
 	}
 
 	private void runDelGroupCmd(CommandSender sender, String[] args) throws IOException {
@@ -103,71 +108,71 @@ public class RgInfoCommand implements CommandExecutor {
 			sender.sendMessage("group name does not contain space!");
 			return;
 		}
-		if (!Config.rgRules.getConfigurationSection("groups").getKeys(false).contains(groupName)) {
+		if (!config.getRegionRulesConf().getConfigurationSection("groups").getKeys(false).contains(groupName)) {
 			sender.sendMessage("Group \"" + groupName + "\" not found!");
 			return;
 		}
 		
-		Config.rgRules.set("groups." + groupName, null);
-		Config.rgRules.save(Config.rgRulesFile);
+		config.getRegionRulesConf().set("groups." + groupName, null);
+		config.savaRegionRulesConf();
 	}
 	
 	private void runAddRegionCmd(CommandSender sender, String[] args) throws IOException {
 		String groupName = args[1].toLowerCase();
 		String[] regionIDsToAdd = Arrays.copyOfRange(args, 2, args.length);
 		
-		if (!Config.rgRules.getConfigurationSection("groups").getKeys(false).contains(groupName)) {
+		if (!config.getRegionRulesConf().getConfigurationSection("groups").getKeys(false).contains(groupName)) {
 			sender.sendMessage("Group \"" + groupName + "\" not found!");
 			return;
 		}
 		
-		List<String> regionIDs = Config.rgRules.getStringList("groups." + groupName + ".region-ids");
+		List<String> regionIDs = config.getRegionRulesConf().getStringList("groups." + groupName + ".region-ids");
 		for (String each : regionIDsToAdd) {
 			// 그룹에 추가하려는 each region이 region specific rule을 갖고있으면 remove
-			ConfigurationSection rgSpecificCfg = Config.rgRules.getConfigurationSection("regions." + each);
+			ConfigurationSection rgSpecificCfg = config.getRegionRulesConf().getConfigurationSection("regions." + each);
 			if (rgSpecificCfg != null) {
-				Config.rgRules.set("regions." + each, null);
+				config.getRegionRulesConf().set("regions." + each, null);
 				sender.sendMessage("\"" + each + "\": Region specific rule removed!");
 			}
 			// 중복확인 and add each region
 			if (!regionIDs.contains(each)) regionIDs.add(each);
 		}
-		Config.rgRules.set("groups." + groupName + ".region-ids", regionIDs);
-		Config.rgRules.save(Config.rgRulesFile);
+		config.getRegionRulesConf().set("groups." + groupName + ".region-ids", regionIDs);
+		config.savaRegionRulesConf();
 	}
 	
 	private void runDelRegionCmd(CommandSender sender, String[] args) throws IOException {
 		String groupName = args[1].toLowerCase();
 		String[] regionIDsToDel = Arrays.copyOfRange(args, 2, args.length);
 		
-		if (!Config.rgRules.getConfigurationSection("groups").getKeys(false).contains(groupName)) {
+		if (!config.getRegionRulesConf().getConfigurationSection("groups").getKeys(false).contains(groupName)) {
 			sender.sendMessage("Group \"" + groupName + "\" not found!");
 			return;
 		}
 		
-		List<String> regionIDs = Config.rgRules.getStringList("groups." + groupName + ".region-ids");
+		List<String> regionIDs = config.getRegionRulesConf().getStringList("groups." + groupName + ".region-ids");
 		regionIDs.removeAll(Arrays.asList(regionIDsToDel));
-		Config.rgRules.set("groups." + groupName + ".region-ids", regionIDs);
-		Config.rgRules.save(Config.rgRulesFile);
+		config.getRegionRulesConf().set("groups." + groupName + ".region-ids", regionIDs);
+		config.savaRegionRulesConf();
 	}
 	
 	private void runGroupTitleCmd(String greetOrBye, CommandSender sender, String[] args) throws IOException {
 		String groupName = args[1].toLowerCase();
 		String text = combineStrArr(Arrays.copyOfRange(args, 3, args.length));
 		
-		if (!Config.rgRules.getConfigurationSection("groups").getKeys(false).contains(groupName)) {
+		if (!config.getRegionRulesConf().getConfigurationSection("groups").getKeys(false).contains(groupName)) {
 			sender.sendMessage("Group \"" + groupName + "\" not found!");
 			return;
 		}
 		
 		if (text != "") {
 			// Add
-			Config.rgRules.set("groups." + groupName + "." + greetOrBye + "-title", text);
+			config.getRegionRulesConf().set("groups." + groupName + "." + greetOrBye + "-title", text);
 		} else {
 			// Remove
-			Config.rgRules.set("groups." + groupName + "." + greetOrBye + "-title", null);
+			config.getRegionRulesConf().set("groups." + groupName + "." + greetOrBye + "-title", null);
 		}
-		Config.rgRules.save(Config.rgRulesFile);
+		config.savaRegionRulesConf();
 	}
 	
 	private void runTitleCmd(String greetOrBye, CommandSender sender, String[] args) throws IOException {
@@ -177,18 +182,18 @@ public class RgInfoCommand implements CommandExecutor {
 		if (text != "") {
 			// Add
 			// The region exists in group rule, move to region rule
-			String group = Config.getGroup(regionID);
+			String group = config.getGroup(regionID);
 			if (group != null) {
-				Config.moveGroupRuleToRg(regionID, group);
+				config.moveGroupRuleToRg(regionID, group);
 				sender.sendMessage("From now, region \"" + regionID + "\" not in group \"" + group + "\"");
 			}
-			Config.rgRules.set("regions." + regionID + "." + greetOrBye + "-title", text);
+			config.getRegionRulesConf().set("regions." + regionID + "." + greetOrBye + "-title", text);
 		} else {
 			// Remove
-			Config.rgRules.set("regions." + regionID + "." + greetOrBye + "-title", null);
-			Config.cleanupRgSpeciRule(regionID);
+			config.getRegionRulesConf().set("regions." + regionID + "." + greetOrBye + "-title", null);
+			config.cleanupRgSpeciRule(regionID);
 		}
-		Config.rgRules.save(Config.rgRulesFile);
+		config.savaRegionRulesConf();
 	}
 
 	/**
