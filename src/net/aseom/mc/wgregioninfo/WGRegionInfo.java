@@ -29,29 +29,30 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 
 	@Override
 	public void onEnable() {
+		plugin = this;
+		this.config = new Config();
+		Lang.loadLang("en-us");
 		PluginManager plugMgr = getServer().getPluginManager();
 		
 		this.worldGuardPlugin = (WorldGuardPlugin) plugMgr.getPlugin("WorldGuard");
 		if (worldGuardPlugin == null) {
-			getLogger().warning("WorldGuard plugin not found. Disabling plugin.");
+			getLogger().warning(Lang.WG_NOT_FOUND.get());
 			plugMgr.disablePlugin(this);
 			return;
 		}
 		if (!plugMgr.isPluginEnabled("WGRegionEvents")) {
-			getLogger().warning("WGRegionEvents dependency not found. Disabling plugin.");
+			getLogger().warning(Lang.WGRGEVT_NOT_FOUND.get());
 			plugMgr.disablePlugin(this);
 			return;
 		}
 		
-		plugin = this;
-		this.config = new Config();
 		config.loadRegionRules();
 		
 		getCommand("regioninfo").setExecutor(new RgInfoCommand());
 		plugMgr.registerEvents(this, this);
 		
 		ConsoleCommandSender console = getServer().getConsoleSender();
-		console.sendMessage(ChatColor.GREEN + "WGRegionInfo Enabled!");
+		console.sendMessage(Lang.PLUGIN_ENABLED.get());
 	}
 	
 	@EventHandler

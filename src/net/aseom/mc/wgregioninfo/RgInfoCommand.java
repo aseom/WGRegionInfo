@@ -14,7 +14,7 @@ import org.bukkit.configuration.ConfigurationSection;
 //TODO: "Group|Region ~ not exist. Nothing to remove." Message
 
 public class RgInfoCommand implements CommandExecutor {
-	private Config config;
+	private final Config config;
 	
 	public RgInfoCommand() {
 		this.config = WGRegionInfo.plugin.getConfigClass();
