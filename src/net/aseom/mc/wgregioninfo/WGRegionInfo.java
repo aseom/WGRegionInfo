@@ -31,7 +31,7 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 	public void onEnable() {
 		plugin = this;
 		this.config = new Config();
-		Lang.loadLang("en-us");
+		Lang.loadLang("ko-kr");
 		PluginManager plugMgr = getServer().getPluginManager();
 		
 		this.worldGuardPlugin = (WorldGuardPlugin) plugMgr.getPlugin("WorldGuard");
@@ -41,7 +41,7 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 			return;
 		}
 		if (!plugMgr.isPluginEnabled("WGRegionEvents")) {
-			getLogger().warning(Lang.WGRGEVT_NOT_FOUND.get());
+			getLogger().warning(Lang.WGRGEVENTS_NOT_FOUND.get());
 			plugMgr.disablePlugin(this);
 			return;
 		}

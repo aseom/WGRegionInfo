@@ -10,7 +10,12 @@ import org.bukkit.craftbukkit.libs.jline.internal.InputStreamReader;
 public enum Lang {
 	PLUGIN_ENABLED("plugin-enabled"),
 	WG_NOT_FOUND("worldguard-not-found"),
-	WGRGEVT_NOT_FOUND("wgregionevents-not-found");
+	WGRGEVENTS_NOT_FOUND("wgrgevents-not-found"),
+	ERR_CANT_SAVE_CONFIG("err-cant-save-config"),
+	GROUP_NOT_FOUND("group-not-found"),
+	GROUPNAME_CANT_SPACE("groupname-cant-space"),
+	RG_SPECI_RULE_REMOVED("rg-speci-rule-removed"),
+	RG_SPECI_RULE_MOVED("rg-speci-rule-moved");
 	
 	public static YamlConfiguration langConf;
 	private final String path;

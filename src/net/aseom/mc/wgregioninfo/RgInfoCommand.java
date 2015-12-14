@@ -1,6 +1,7 @@
 package net.aseom.mc.wgregioninfo;
 
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,7 +28,7 @@ public class RgInfoCommand implements CommandExecutor {
 			boolean firstArgVaild = cmdHandling(sender, args);
 			if (!firstArgVaild) return false; // Show "/regioninfo" usage
 		} catch (IOException e) {
-			sender.sendMessage("Error: Can't save config!");
+			sender.sendMessage(Lang.ERR_CANT_SAVE_CONFIG.get());
 			e.printStackTrace();
 		}
 		return true;
@@ -93,7 +94,7 @@ public class RgInfoCommand implements CommandExecutor {
 		String groupName = args[1].toLowerCase();
 		
 		if (args.length > 2) {
-			sender.sendMessage("group name cannot contain space!");
+			sender.sendMessage(Lang.GROUPNAME_CANT_SPACE.get());
 			return;
 		}
 		
@@ -105,11 +106,11 @@ public class RgInfoCommand implements CommandExecutor {
 		String groupName = args[1].toLowerCase();
 		
 		if (args.length > 2) {
-			sender.sendMessage("group name does not contain space!");
+			sender.sendMessage(Lang.GROUPNAME_CANT_SPACE.get());
 			return;
 		}
 		if (!config.getRegionRulesConf().getConfigurationSection("groups").getKeys(false).contains(groupName)) {
-			sender.sendMessage("Group \"" + groupName + "\" not found!");
+			sender.sendMessage(MessageFormat.format(Lang.GROUP_NOT_FOUND.get(), groupName));
 			return;
 		}
 		
@@ -122,20 +123,20 @@ public class RgInfoCommand implements CommandExecutor {
 		String[] regionIDsToAdd = Arrays.copyOfRange(args, 2, args.length);
 		
 		if (!config.getRegionRulesConf().getConfigurationSection("groups").getKeys(false).contains(groupName)) {
-			sender.sendMessage("Group \"" + groupName + "\" not found!");
+			sender.sendMessage(MessageFormat.format(Lang.GROUP_NOT_FOUND.get(), groupName));
 			return;
 		}
 		
 		List<String> regionIDs = config.getRegionRulesConf().getStringList("groups." + groupName + ".region-ids");
-		for (String each : regionIDsToAdd) {
+		for (String eRgID : regionIDsToAdd) {
 			// 그룹에 추가하려는 each region이 region specific rule을 갖고있으면 remove
-			ConfigurationSection rgSpecificCfg = config.getRegionRulesConf().getConfigurationSection("regions." + each);
+			ConfigurationSection rgSpecificCfg = config.getRegionRulesConf().getConfigurationSection("regions." + eRgID);
 			if (rgSpecificCfg != null) {
-				config.getRegionRulesConf().set("regions." + each, null);
-				sender.sendMessage("\"" + each + "\": Region specific rule removed!");
+				config.getRegionRulesConf().set("regions." + eRgID, null);
+				sender.sendMessage(MessageFormat.format(Lang.RG_SPECI_RULE_REMOVED.get(), eRgID));
 			}
 			// 중복확인 and add each region
-			if (!regionIDs.contains(each)) regionIDs.add(each);
+			if (!regionIDs.contains(eRgID)) regionIDs.add(eRgID);
 		}
 		config.getRegionRulesConf().set("groups." + groupName + ".region-ids", regionIDs);
 		config.savaRegionRulesConf();
@@ -146,12 +147,13 @@ public class RgInfoCommand implements CommandExecutor {
 		String[] regionIDsToDel = Arrays.copyOfRange(args, 2, args.length);
 		
 		if (!config.getRegionRulesConf().getConfigurationSection("groups").getKeys(false).contains(groupName)) {
-			sender.sendMessage("Group \"" + groupName + "\" not found!");
+			sender.sendMessage(MessageFormat.format(Lang.GROUP_NOT_FOUND.get(), groupName));
 			return;
 		}
 		
 		List<String> regionIDs = config.getRegionRulesConf().getStringList("groups." + groupName + ".region-ids");
 		regionIDs.removeAll(Arrays.asList(regionIDsToDel));
+		//TODO: 삭제할 region이 존재 안하는 경우 메시지
 		config.getRegionRulesConf().set("groups." + groupName + ".region-ids", regionIDs);
 		config.savaRegionRulesConf();
 	}
@@ -161,7 +163,7 @@ public class RgInfoCommand implements CommandExecutor {
 		String text = combineStrArr(Arrays.copyOfRange(args, 3, args.length));
 		
 		if (!config.getRegionRulesConf().getConfigurationSection("groups").getKeys(false).contains(groupName)) {
-			sender.sendMessage("Group \"" + groupName + "\" not found!");
+			sender.sendMessage(MessageFormat.format(Lang.GROUP_NOT_FOUND.get(), groupName));
 			return;
 		}
 		
@@ -185,7 +187,7 @@ public class RgInfoCommand implements CommandExecutor {
 			String group = config.getGroup(regionID);
 			if (group != null) {
 				config.moveGroupRuleToRg(regionID, group);
-				sender.sendMessage("From now, region \"" + regionID + "\" not in group \"" + group + "\"");
+				sender.sendMessage(MessageFormat.format(Lang.RG_SPECI_RULE_MOVED.get(), regionID, group));
 			}
 			config.getRegionRulesConf().set("regions." + regionID + "." + greetOrBye + "-title", text);
 		} else {
