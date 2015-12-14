@@ -85,6 +85,14 @@ public class RgInfoCommand implements CommandExecutor {
 			else
 				runTitleCmd(args[2].toLowerCase(), sender, args);
 			return true;
+		} else if (args[0].equalsIgnoreCase("reload")) {
+			try {
+				config.loadRegionRules();
+			} catch (Exception e) {
+				sender.sendMessage(MessageFormat.format(Lang.ERROR_WHILE_RELOAD.get(), e.toString()));
+				e.printStackTrace();
+			}
+			return true;
 		} else {
 			return false;
 		}
@@ -167,7 +175,7 @@ public class RgInfoCommand implements CommandExecutor {
 			return;
 		}
 		
-		if (text != "") {
+		if (!text.equals("")) {
 			// Add
 			config.getRegionRulesConf().set("groups." + groupName + "." + greetOrBye + "-title", text);
 		} else {
@@ -181,7 +189,7 @@ public class RgInfoCommand implements CommandExecutor {
 		String regionID = args[1].toLowerCase();
 		String text = combineStrArr(Arrays.copyOfRange(args, 3, args.length));
 		
-		if (text != "") {
+		if (!text.equals("")) {
 			// Add
 			// The region exists in group rule, move to region rule
 			String group = config.getGroup(regionID);

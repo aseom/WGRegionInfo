@@ -1,5 +1,4 @@
-bin/
-.settings/
-.classpath
-.project
-*.jardesc
+META-INF/
+out/
+.idea/
+*.iml

@@ -6,4 +6,4 @@ softdepend: [WorldGuard, WGRegionEvents]
 commands:
   regioninfo:
     description: "WG RegionInfo Command."
-    usage: "Wrong command. Type /regioninfo help"
+    usage: "Wrong command."

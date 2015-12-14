@@ -46,7 +46,11 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 			return;
 		}
 		
-		config.loadRegionRules();
+		try {
+			config.loadRegionRules();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		
 		getCommand("regioninfo").setExecutor(new RgInfoCommand());
 		plugMgr.registerEvents(this, this);
@@ -117,7 +121,6 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 	public String[] getUsersName(DefaultDomain domain) {
 		String owners = domain.toPlayersString(worldGuardPlugin.getProfileCache());
 		if (owners.length() == 0) return null;
-		String[] ownerNames = owners.replace("name:", "").toLowerCase().split(", ");
-		return ownerNames;
+		return owners.replace("name:", "").toLowerCase().split(", ");
 	}
 }

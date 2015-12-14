@@ -15,14 +15,15 @@ public enum Lang {
 	GROUP_NOT_FOUND("group-not-found"),
 	GROUPNAME_CANT_SPACE("groupname-cant-space"),
 	RG_SPECI_RULE_REMOVED("rg-speci-rule-removed"),
-	RG_SPECI_RULE_MOVED("rg-speci-rule-moved");
+	RG_SPECI_RULE_MOVED("rg-speci-rule-moved"),
+	ERROR_WHILE_RELOAD("error-while-reload");
 	
 	public static YamlConfiguration langConf;
 	private final String path;
 	
 	/**
 	 * Constructor
-	 * @param Yaml config path
+	 * @param path Yaml config path
 	 */
 	Lang(String path) {
 		this.path = path;
@@ -38,7 +39,7 @@ public enum Lang {
 	
 	/**
 	 * Set locale and load language config, before use
-	 * @param Locale code
+	 * @param locale Locale code
 	 */
 	public static void loadLang(String locale) {
 		try {

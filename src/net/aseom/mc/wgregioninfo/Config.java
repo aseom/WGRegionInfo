@@ -2,14 +2,12 @@ package net.aseom.mc.wgregioninfo;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.List;
 import java.util.Set;
 
-import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 public class Config {
@@ -32,20 +30,12 @@ public class Config {
 		return this.regionRulesConf;
 	}
 
-	public void loadRegionRules() {
+	public void loadRegionRules() throws Exception {
 		this.regionRulesFile = new File(WGRegionInfo.plugin.getDataFolder(), "region-rules.yml");
 		if (!regionRulesFile.exists()) createDefaultRegionRules();
 		
-		try {
-			this.regionRulesConf = new YamlConfiguration();
-			regionRulesConf.load(regionRulesFile);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (InvalidConfigurationException e) {
-			e.printStackTrace();
-		}
+		this.regionRulesConf = new YamlConfiguration();
+		regionRulesConf.load(regionRulesFile);
 	}
 	
 	public void createDefaultRegionRules() {
