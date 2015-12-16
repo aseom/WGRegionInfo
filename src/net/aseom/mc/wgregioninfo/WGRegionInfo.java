@@ -96,23 +96,23 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		String[] memberName = getUsersName(region.getMembers());
 		
 		Scoreboard scoreBoard = Bukkit.getScoreboardManager().getNewScoreboard();
-		Objective scroreObj = scoreBoard.registerNewObjective("test", "dummy");
-		scroreObj.setDisplaySlot(DisplaySlot.SIDEBAR);
+		Objective scoreObj = scoreBoard.registerNewObjective("test", "dummy");
+		scoreObj.setDisplaySlot(DisplaySlot.SIDEBAR);
 		
-		scroreObj.setDisplayName(ChatColor.BOLD + "WorldGuard Region");
+		scoreObj.setDisplayName(ChatColor.BOLD + "WorldGuard Region");
 		int score = -1; // 한줄 출력마다 1씩 감소하게될 줄번호
-		scroreObj.getScore(ChatColor.GOLD + "ID:").setScore(score--);
-		scroreObj.getScore(" - " + region.getId()).setScore(score--);
+		scoreObj.getScore(ChatColor.GOLD + "ID:").setScore(score--);
+		scoreObj.getScore(" - " + region.getId()).setScore(score--);
 		if (ownerName != null) {
-			scroreObj.getScore(ChatColor.GOLD + "Owners:").setScore(score--);
+			scoreObj.getScore(ChatColor.GOLD + "Owners:").setScore(score--);
 			for (String eOwner : ownerName) {
-				scroreObj.getScore(" - " + eOwner).setScore(score--);
+				scoreObj.getScore(" - " + eOwner).setScore(score--);
 			}
 		}
 		if (memberName != null) {
-			scroreObj.getScore(ChatColor.GOLD + "Members:").setScore(score--);
+			scoreObj.getScore(ChatColor.GOLD + "Members:").setScore(score--);
 			for (String eMember : memberName) {
-				scroreObj.getScore(" - " + eMember).setScore(score--);
+				scoreObj.getScore(" - " + eMember).setScore(score--);
 			}
 		}
 		return scoreBoard;
