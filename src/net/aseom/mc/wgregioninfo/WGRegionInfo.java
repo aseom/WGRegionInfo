@@ -68,10 +68,9 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		player.setScoreboard(scoreBoard);
 		
 		String greetTitle = config.getRegionRule("greet-title", region.getId());
-		if (greetTitle != null) {
-			Title title = new Title("", greetTitle, 10, 20, 10);
-			title.setTimingsToTicks();
-			title.send(player);
+		String greetSubtitle = config.getRegionRule("greet-subtitle", region.getId());
+		if (greetTitle != null || greetSubtitle != null) {
+			sendTitleSubtitle(greetTitle, greetSubtitle, player);
 		}
 	}
 	
@@ -84,10 +83,9 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		event.getPlayer().setScoreboard(blankBoard);
 
 		String byeTitle = config.getRegionRule("bye-title", region.getId());
-		if (byeTitle != null) {
-			Title title = new Title("", byeTitle, 10, 20, 10);
-			title.setTimingsToTicks();
-			title.send(player);
+		String byeSubtitle = config.getRegionRule("bye-subtitle", region.getId());
+		if (byeTitle != null || byeSubtitle != null) {
+			sendTitleSubtitle(byeTitle, byeSubtitle, player);
 		}
 	}
 	
@@ -116,6 +114,14 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 			}
 		}
 		return scoreBoard;
+	}
+
+	public void sendTitleSubtitle(String byeTitle, String byeSubtitle, Player player) {
+		if (byeTitle == null) byeTitle = "";
+		if (byeSubtitle == null) byeSubtitle = "";
+		Title title = new Title(byeTitle, byeSubtitle, 10, 20, 10);
+		title.setTimingsToTicks();
+		title.send(player);
 	}
 
 	public String[] getUsersName(DefaultDomain domain) {

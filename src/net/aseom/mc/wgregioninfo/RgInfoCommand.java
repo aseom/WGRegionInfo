@@ -71,19 +71,23 @@ public class RgInfoCommand implements CommandExecutor {
 				sender.sendMessage("Usage: /regioninfo delregion <GroupName> <RegionID>");
 			}
 			return true;
-		} else if (args[0].equalsIgnoreCase("grouptitle")) {
+		} else if (args[0].equalsIgnoreCase("grouprule")) {
 			//TODO: Check permission
-			if (args.length < 3 || !args[2].equalsIgnoreCase("greet") && !args[2].equalsIgnoreCase("bye"))
-				sender.sendMessage("Usage: /regioninfo grouptitle <GroupName> <greet|bye> <Text>");
-			else
-				runGroupTitleCmd(args[2].toLowerCase(), sender, args);
+			if (args.length < 3 || !args[2].matches("(greet|bye)-(subt|t)itle")) {
+				sender.sendMessage("Usage: /regioninfo grouprule <GroupName> <Rule> [Value]");
+				sender.sendMessage("Available rules: greet-title, greet-subtitle, bye-title, bye-subtitle");
+			} else {
+				runGroupRuleCmd(args[2].toLowerCase(), sender, args);
+			}
 			return true;
-		} else if (args[0].equalsIgnoreCase("title")) {
+		} else if (args[0].equalsIgnoreCase("rule")) {
 			//TODO: Check permission
-			if (args.length < 3 || !args[2].equalsIgnoreCase("greet") && !args[2].equalsIgnoreCase("bye"))
-				sender.sendMessage("Usage: /regioninfo title <RegionID> <greet|bye> <Text>");
-			else
-				runTitleCmd(args[2].toLowerCase(), sender, args);
+			if (args.length < 3 || !args[2].matches("(greet|bye)-(subt|t)itle")) {
+				sender.sendMessage("Usage: /regioninfo rule <RegionID> <Rule> [Value]");
+				sender.sendMessage("Available rules: greet-title, greet-subtitle, bye-title, bye-subtitle");
+			} else {
+				runRuleCmd(args[2].toLowerCase(), sender, args);
+			}
 			return true;
 		} else if (args[0].equalsIgnoreCase("reload")) {
 			try {
@@ -166,30 +170,30 @@ public class RgInfoCommand implements CommandExecutor {
 		config.savaRegionRulesConf();
 	}
 	
-	private void runGroupTitleCmd(String greetOrBye, CommandSender sender, String[] args) throws IOException {
+	private void runGroupRuleCmd(String ruleName, CommandSender sender, String[] args) throws IOException {
 		String groupName = args[1].toLowerCase();
-		String text = combineStrArr(Arrays.copyOfRange(args, 3, args.length));
+		String value = combineStrArr(Arrays.copyOfRange(args, 3, args.length));
 		
 		if (!config.getRegionRulesConf().getConfigurationSection("groups").getKeys(false).contains(groupName)) {
 			sender.sendMessage(MessageFormat.format(Lang.GROUP_NOT_FOUND.get(), groupName));
 			return;
 		}
 		
-		if (!text.equals("")) {
+		if (!value.equals("")) {
 			// Add
-			config.getRegionRulesConf().set("groups." + groupName + "." + greetOrBye + "-title", text);
+			config.getRegionRulesConf().set("groups." + groupName + "." + ruleName, value);
 		} else {
 			// Remove
-			config.getRegionRulesConf().set("groups." + groupName + "." + greetOrBye + "-title", null);
+			config.getRegionRulesConf().set("groups." + groupName + "." + ruleName, null);
 		}
 		config.savaRegionRulesConf();
 	}
 	
-	private void runTitleCmd(String greetOrBye, CommandSender sender, String[] args) throws IOException {
+	private void runRuleCmd(String ruleName, CommandSender sender, String[] args) throws IOException {
 		String regionID = args[1].toLowerCase();
-		String text = combineStrArr(Arrays.copyOfRange(args, 3, args.length));
+		String value = combineStrArr(Arrays.copyOfRange(args, 3, args.length));
 		
-		if (!text.equals("")) {
+		if (!value.equals("")) {
 			// Add
 			// The region exists in group rule, move to region rule
 			String group = config.getGroup(regionID);
@@ -197,10 +201,10 @@ public class RgInfoCommand implements CommandExecutor {
 				config.moveGroupRuleToRg(regionID, group);
 				sender.sendMessage(MessageFormat.format(Lang.RG_SPECI_RULE_MOVED.get(), regionID, group));
 			}
-			config.getRegionRulesConf().set("regions." + regionID + "." + greetOrBye + "-title", text);
+			config.getRegionRulesConf().set("regions." + regionID + "." + ruleName, value);
 		} else {
 			// Remove
-			config.getRegionRulesConf().set("regions." + regionID + "." + greetOrBye + "-title", null);
+			config.getRegionRulesConf().set("regions." + regionID + "." + ruleName, null);
 			config.cleanupRgSpeciRule(regionID);
 		}
 		config.savaRegionRulesConf();
