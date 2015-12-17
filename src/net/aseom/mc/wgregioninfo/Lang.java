@@ -35,6 +35,7 @@ public enum Lang {
 	GROUPNAME_CANT_SPACE("groupname-cant-space"),
 	RG_SPECI_RULE_REMOVED("rg-speci-rule-removed"),
 	RG_SPECI_RULE_MOVED("rg-speci-rule-moved"),
+	PLUGIN_RELOADED("plugin-reloaded"),
 	ERROR_WHILE_RELOAD("error-while-reload");
 	
 	public static YamlConfiguration langConf;

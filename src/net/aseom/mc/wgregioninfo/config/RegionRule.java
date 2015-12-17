@@ -1,4 +1,4 @@
-package net.aseom.mc.wgregioninfo;
+package net.aseom.mc.wgregioninfo.config;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -10,7 +10,9 @@ import java.util.Set;
 
 import org.bukkit.configuration.file.YamlConfiguration;
 
-public class Config {
+import net.aseom.mc.wgregioninfo.WGRegionInfo;
+
+public class RegionRule {
 	private final String defaultRegionRules
 		= "regions:\r\n"
 		+ "  example-region:\r\n"
@@ -39,9 +41,6 @@ public class Config {
 	}
 	
 	public void createDefaultRegionRules() {
-		if (!WGRegionInfo.plugin.getDataFolder().exists()) {
-			WGRegionInfo.plugin.getDataFolder().mkdirs();
-		}
 		try {
 			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(regionRulesFile), "UTF-8"));
 			writer.write(defaultRegionRules);

@@ -2,7 +2,6 @@ package net.aseom.mc.wgregioninfo;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -18,22 +17,32 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.domains.DefaultDomain;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
+import net.aseom.mc.wgregioninfo.config.PluginConfig;
+import net.aseom.mc.wgregioninfo.config.RegionRule;
+
 public class WGRegionInfo extends JavaPlugin implements Listener {
 	public static WGRegionInfo plugin;
-	private Config config;
+	private PluginConfig pluginConfig;
+	private RegionRule regionRule;
 	private WorldGuardPlugin worldGuardPlugin;
 	
-	public Config getConfigClass() {
-		return this.config;
+	public RegionRule getRegionRuleClass() {
+		return this.regionRule;
 	}
 
 	@Override
 	public void onEnable() {
 		plugin = this;
-		this.config = new Config();
-		Lang.loadLang("ko-kr");
-		PluginManager plugMgr = getServer().getPluginManager();
+		if (!getDataFolder().exists()) getDataFolder().mkdirs();
+		this.pluginConfig = new PluginConfig();
+		try {
+			pluginConfig.loadPluginConfig();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		setPluginLanguage();
 		
+		PluginManager plugMgr = getServer().getPluginManager();
 		this.worldGuardPlugin = (WorldGuardPlugin) plugMgr.getPlugin("WorldGuard");
 		if (worldGuardPlugin == null) {
 			getLogger().warning(Lang.WG_NOT_FOUND.get());
@@ -46,17 +55,17 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 			return;
 		}
 		
+		plugMgr.registerEvents(this, this);
+		getCommand("regioninfo").setExecutor(new RgInfoCommand());
+		
+		this.regionRule = new RegionRule();
 		try {
-			config.loadRegionRules();
-		} catch (Exception e) {
-			e.printStackTrace();
+			regionRule.loadRegionRules();
+		} catch (Exception e1) {
+			e1.printStackTrace();
 		}
 		
-		getCommand("regioninfo").setExecutor(new RgInfoCommand());
-		plugMgr.registerEvents(this, this);
-		
-		ConsoleCommandSender console = getServer().getConsoleSender();
-		console.sendMessage(Lang.PLUGIN_ENABLED.get());
+		getServer().getConsoleSender().sendMessage(Lang.PLUGIN_ENABLED.get());
 	}
 	
 	@EventHandler
@@ -64,11 +73,13 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		Player player = event.getPlayer();
 		ProtectedRegion region = event.getRegion();
 		
-		Scoreboard scoreBoard = getRegionInfoBoard(region);
-		player.setScoreboard(scoreBoard);
+		if (pluginConfig.getPluginConfig().getBoolean("enable-hud")) {
+			Scoreboard scoreBoard = getRegionInfoBoard(region);
+			player.setScoreboard(scoreBoard);
+		}
 		
-		String greetTitle = config.getRegionRule("greet-title", region.getId());
-		String greetSubtitle = config.getRegionRule("greet-subtitle", region.getId());
+		String greetTitle = regionRule.getRegionRule("greet-title", region.getId());
+		String greetSubtitle = regionRule.getRegionRule("greet-subtitle", region.getId());
 		if (greetTitle != null || greetSubtitle != null) {
 			sendTitleSubtitle(greetTitle, greetSubtitle, player);
 		}
@@ -79,11 +90,13 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		Player player = event.getPlayer();
 		ProtectedRegion region = event.getRegion();
 		
-		Scoreboard blankBoard = Bukkit.getScoreboardManager().getNewScoreboard();
-		event.getPlayer().setScoreboard(blankBoard);
+		if (pluginConfig.getPluginConfig().getBoolean("enable-hud")) {
+			Scoreboard blankBoard = Bukkit.getScoreboardManager().getNewScoreboard();
+			event.getPlayer().setScoreboard(blankBoard);
+		}
 
-		String byeTitle = config.getRegionRule("bye-title", region.getId());
-		String byeSubtitle = config.getRegionRule("bye-subtitle", region.getId());
+		String byeTitle = regionRule.getRegionRule("bye-title", region.getId());
+		String byeSubtitle = regionRule.getRegionRule("bye-subtitle", region.getId());
 		if (byeTitle != null || byeSubtitle != null) {
 			sendTitleSubtitle(byeTitle, byeSubtitle, player);
 		}
@@ -128,5 +141,22 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		String owners = domain.toPlayersString(worldGuardPlugin.getProfileCache());
 		if (owners.length() == 0) return null;
 		return owners.replace("name:", "").toLowerCase().split(", ");
+	}
+
+	public void setPluginLanguage() {
+		String language = pluginConfig.getPluginConfig().getString("language");
+		if (!language.matches("en-us|ko-kr")) {
+			getLogger().warning("Language " + language + " is unvaild. Loading en-us...");
+			Lang.loadLang("en-us");
+			return;
+		}
+		Lang.loadLang(language);
+	}
+	
+	public void reloadPlugin() throws Exception {
+		if (!getDataFolder().exists()) getDataFolder().mkdirs();
+		pluginConfig.loadPluginConfig();
+		setPluginLanguage();
+		regionRule.loadRegionRules();
 	}
 }
