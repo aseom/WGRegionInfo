@@ -14,17 +14,11 @@ import org.bukkit.entity.Player;
 import net.aseom.mc.wgregioninfo.config.PluginConfig;
 import net.aseom.mc.wgregioninfo.config.RegionRule;
 
-//TODO: "/regioninfo help" command
-
 public class RgInfoCommand implements CommandExecutor {
-	private final RegionRule regionRule;
+	private RegionRule regionRule;
 	private final String[] availableRules = {
 		"greet-title", "greet-subtitle", "bye-title", "bye-subtitle"
 	};
-	
-	public RgInfoCommand() {
-		this.regionRule = WGRegionInfo.plugin.getRegionRuleClass();
-	}
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -52,7 +46,7 @@ public class RgInfoCommand implements CommandExecutor {
 		return true;
 	}
 	
-	private void toggleRegionHUD(Player player) throws IOException {
+	public void toggleRegionHUD(Player player) throws IOException {
 		PluginConfig pluginConfig = WGRegionInfo.plugin.getPluginConfigClass();
 		List<String> hudOffUsers = pluginConfig.getPluginConfig().getStringList("hud-off-users");
 		
@@ -78,8 +72,9 @@ public class RgInfoCommand implements CommandExecutor {
 	 * @throws IOException Config save fail
 	 */
 	private boolean regionInfoCmdHandling(CommandSender sender, String[] args) throws IOException {
+		this.regionRule = WGRegionInfo.plugin.getRegionRuleClass();
+		
 		if (args[0].equalsIgnoreCase("newgroup")) {
-			//TODO: Check permission
 			if (args.length > 1) {
 				runNewGroupCmd(sender, args);
 			} else {
@@ -87,7 +82,6 @@ public class RgInfoCommand implements CommandExecutor {
 			}
 			return true;
 		} else if (args[0].equalsIgnoreCase("delgroup")) {
-			//TODO: Check permission
 			if (args.length > 1) {
 				runDelGroupCmd(sender, args);
 			} else {
@@ -95,7 +89,6 @@ public class RgInfoCommand implements CommandExecutor {
 			}
 			return true;
 		} else if (args[0].equalsIgnoreCase("addregion")) {
-			//TODO: Check permission
 			if (args.length > 2) {
 				runAddRegionCmd(sender, args);
 			} else {
@@ -103,7 +96,6 @@ public class RgInfoCommand implements CommandExecutor {
 			}
 			return true;
 		} else if (args[0].equalsIgnoreCase("delregion")) {
-			//TODO: Check permission
 			if (args.length > 2) {
 				runDelRegionCmd(sender, args);
 			} else {
@@ -111,7 +103,6 @@ public class RgInfoCommand implements CommandExecutor {
 			}
 			return true;
 		} else if (args[0].equalsIgnoreCase("grouprule")) {
-			//TODO: Check permission
 			if (args.length < 3 || !Arrays.asList(availableRules).contains(args[2])) {
 				sender.sendMessage(Lang.USAGE_GROUPRULE.get());
 				sender.sendMessage(Lang.AVAILABLE_RULES.get());
@@ -120,21 +111,11 @@ public class RgInfoCommand implements CommandExecutor {
 			}
 			return true;
 		} else if (args[0].equalsIgnoreCase("rule")) {
-			//TODO: Check permission
 			if (args.length < 3 || !Arrays.asList(availableRules).contains(args[2])) {
 				sender.sendMessage(Lang.USAGE_RULE.get());
 				sender.sendMessage(Lang.AVAILABLE_RULES.get());
 			} else {
-				runRuleCmd(args[2].toLowerCase(), sender, args);
-			}
-			return true;
-		} else if (args[0].equalsIgnoreCase("reload")) {
-			try {
-				WGRegionInfo.plugin.reloadPlugin();
-				sender.sendMessage(Lang.PLUGIN_RELOADED.get());
-			} catch (Exception e) {
-				sender.sendMessage(MessageFormat.format(Lang.ERROR_WHILE_RELOAD.get(), e.toString()));
-				e.printStackTrace();
+				runRuleCmd(sender, args);
 			}
 			return true;
 		} else if (args[0].equalsIgnoreCase("reload")) {
@@ -259,8 +240,9 @@ public class RgInfoCommand implements CommandExecutor {
 		}
 	}
 	
-	private void runRuleCmd(String ruleID, CommandSender sender, String[] args) throws IOException {
+	private void runRuleCmd(CommandSender sender, String[] args) throws IOException {
 		String regionID = args[1].toLowerCase();
+		String ruleID = args[2].toLowerCase();
 		String value = combineStrArr(Arrays.copyOfRange(args, 3, args.length));
 		
 		if (!value.equals("")) {
@@ -285,6 +267,7 @@ public class RgInfoCommand implements CommandExecutor {
 
 	/**
 	 * 띄어쓰기 포함 텍스트가 배열로 쪼개진 것 다시 합침
+	 * + Escape characters
 	 * @return Combined text
 	 */
 	public String combineStrArr(String[] splitedTexts) {
@@ -292,8 +275,6 @@ public class RgInfoCommand implements CommandExecutor {
 		for (String eSplText : splitedTexts) {
 			combinedText += eSplText + " ";
 		}
-		combinedText = combinedText.trim();
-		//TODO: Escape " char, \ char
-		return combinedText;
+		return combinedText.trim();
 	}
 }

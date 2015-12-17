@@ -5,8 +5,9 @@ softdepend: [WorldGuard, WGRegionEvents]
 
 commands:
   regioninfo:
+    aliases: [rginfo, rgi]
     description: "RegionInfo command."
     usage: "Wrong command."
   regionhud:
-    aliases: [rghud]
+    aliases: [rghud, rgh]
     description: "Toggle RegionInfo HUD."

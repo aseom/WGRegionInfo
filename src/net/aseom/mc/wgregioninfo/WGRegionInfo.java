@@ -12,14 +12,17 @@ import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 
-import com.mewin.WGRegionEvents.events.RegionEnterEvent;
-import com.mewin.WGRegionEvents.events.RegionLeaveEvent;
+import com.mewin.WGRegionEvents.events.RegionEnteredEvent;
+import com.mewin.WGRegionEvents.events.RegionLeftEvent;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.domains.DefaultDomain;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import net.aseom.mc.wgregioninfo.config.PluginConfig;
 import net.aseom.mc.wgregioninfo.config.RegionRule;
+
+//TODO: "/regioninfo help" command
+//TODO: Permission support
 
 public class WGRegionInfo extends JavaPlugin implements Listener {
 	public static WGRegionInfo plugin;
@@ -80,7 +83,7 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 	}
 	
 	@EventHandler
-	public void onRegionEnter(RegionEnterEvent event) {
+	public void onRegionEntered(RegionEnteredEvent event) {
 		Player player = event.getPlayer();
 		ProtectedRegion region = event.getRegion();
 		YamlConfiguration pConf = pluginConfig.getPluginConfig();
@@ -99,7 +102,7 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 	}
 	
 	@EventHandler
-	public void onRegionLeave(RegionLeaveEvent event) {
+	public void onRegionLeft(RegionLeftEvent event) {
 		Player player = event.getPlayer();
 		ProtectedRegion region = event.getRegion();
 		
@@ -115,7 +118,12 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 			sendTitleSubtitle(byeTitle, byeSubtitle, player);
 		}
 	}
-	
+
+	/**
+	 * Get scoreboard that include region info
+	 * @param region
+	 * @return
+	 */
 	public Scoreboard getHudBoard(ProtectedRegion region) {
 		String[] ownerName = getUsersName(region.getOwners());
 		String[] memberName = getUsersName(region.getMembers());
@@ -145,6 +153,10 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		return scoreBoard;
 	}
 	
+	/**
+	 * Reload current HUD display
+	 * @param player
+	 */
 	public void reloadHudBoard(Player player) {
 		if (currentHudBoard == null) return;
 		YamlConfiguration pConf = pluginConfig.getPluginConfig();
@@ -159,20 +171,37 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		}
 	}
 
-	public void sendTitleSubtitle(String byeTitle, String byeSubtitle, Player player) {
-		if (byeTitle == null) byeTitle = "";
-		if (byeSubtitle == null) byeSubtitle = "";
-		Title title = new Title(byeTitle, byeSubtitle, 10, 20, 10);
-		title.setTimingsToTicks();
-		title.send(player);
+	/**
+	 * Send title or subtitle
+	 * @param title
+	 * @param subtitle
+	 * @param player
+	 */
+	public void sendTitleSubtitle(String title, String subtitle, Player player) {
+		if (title == null) title = "";
+		if (subtitle == null) subtitle = "";
+		Title t = new Title(escape(title), escape(subtitle), 10, 20, 10);
+		t.setTimingsToTicks();
+		t.send(player);
+	}
+	public String escape(String str) {
+		return str.replace("\"", "\\\"").replace("\\", "\\\\");
 	}
 
+	/**
+	 * Get users name from domain
+	 * @param domain
+	 * @return Array of users name
+	 */
 	public String[] getUsersName(DefaultDomain domain) {
 		String owners = domain.toPlayersString(worldGuardPlugin.getProfileCache());
 		if (owners.length() == 0) return null;
 		return owners.replace("name:", "").toLowerCase().split(", ");
 	}
 
+	/**
+	 * Get language config and set plugin language 
+	 */
 	public void setPluginLanguage() {
 		String language = pluginConfig.getPluginConfig().getString("language");
 		if (!language.matches("en-us|ko-kr")) {
@@ -183,6 +212,10 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		Lang.loadLang(language);
 	}
 	
+	/**
+	 * Reload all configs
+	 * @throws Exception
+	 */
 	public void reloadPlugin() throws Exception {
 		if (!getDataFolder().exists()) getDataFolder().mkdirs();
 		pluginConfig.loadPluginConfig();
