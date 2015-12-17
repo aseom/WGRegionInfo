@@ -12,10 +12,12 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 
 //TODO: "/regioninfo help" command
-//TODO: "Group|Region ~ not exist. Nothing to remove." Message
 
 public class RgInfoCommand implements CommandExecutor {
 	private final Config config;
+	private final String[] availableRules = {
+		"greet-title", "greet-subtitle", "bye-title", "bye-subtitle"
+	};
 	
 	public RgInfoCommand() {
 		this.config = WGRegionInfo.plugin.getConfigClass();
@@ -44,7 +46,7 @@ public class RgInfoCommand implements CommandExecutor {
 			if (args.length > 1) {
 				runNewGroupCmd(sender, args);
 			} else {
-				sender.sendMessage("Usage: /regioninfo newgroup <GroupName>");
+				sender.sendMessage(Lang.USAGE_NEWGROUP.get());
 			}
 			return true;
 		} else if (args[0].equalsIgnoreCase("delgroup")) {
@@ -52,7 +54,7 @@ public class RgInfoCommand implements CommandExecutor {
 			if (args.length > 1) {
 				runDelGroupCmd(sender, args);
 			} else {
-				sender.sendMessage("Usage: /regioninfo delgroup <GroupName>");
+				sender.sendMessage(Lang.USAGE_DELGROUP.get());
 			}
 			return true;
 		} else if (args[0].equalsIgnoreCase("addregion")) {
@@ -60,7 +62,7 @@ public class RgInfoCommand implements CommandExecutor {
 			if (args.length > 2) {
 				runAddRegionCmd(sender, args);
 			} else {
-				sender.sendMessage("Usage: /regioninfo addregion <GroupName> <RegionID>");
+				sender.sendMessage(Lang.USAGE_ADDREGION.get());
 			}
 			return true;
 		} else if (args[0].equalsIgnoreCase("delregion")) {
@@ -68,23 +70,23 @@ public class RgInfoCommand implements CommandExecutor {
 			if (args.length > 2) {
 				runDelRegionCmd(sender, args);
 			} else {
-				sender.sendMessage("Usage: /regioninfo delregion <GroupName> <RegionID>");
+				sender.sendMessage(Lang.USAGE_DELREGION.get());
 			}
 			return true;
 		} else if (args[0].equalsIgnoreCase("grouprule")) {
 			//TODO: Check permission
-			if (args.length < 3 || !args[2].matches("(greet|bye)-(subt|t)itle")) {
-				sender.sendMessage("Usage: /regioninfo grouprule <GroupName> <Rule> [Value]");
-				sender.sendMessage("Available rules: greet-title, greet-subtitle, bye-title, bye-subtitle");
+			if (args.length < 3 || !Arrays.asList(availableRules).contains(args[2])) {
+				sender.sendMessage(Lang.USAGE_GROUPRULE.get());
+				sender.sendMessage(Lang.AVAILABLE_RULES.get());
 			} else {
 				runGroupRuleCmd(args[2].toLowerCase(), sender, args);
 			}
 			return true;
 		} else if (args[0].equalsIgnoreCase("rule")) {
 			//TODO: Check permission
-			if (args.length < 3 || !args[2].matches("(greet|bye)-(subt|t)itle")) {
-				sender.sendMessage("Usage: /regioninfo rule <RegionID> <Rule> [Value]");
-				sender.sendMessage("Available rules: greet-title, greet-subtitle, bye-title, bye-subtitle");
+			if (args.length < 3 || !Arrays.asList(availableRules).contains(args[2])) {
+				sender.sendMessage(Lang.USAGE_RULE.get());
+				sender.sendMessage(Lang.AVAILABLE_RULES.get());
 			} else {
 				runRuleCmd(args[2].toLowerCase(), sender, args);
 			}
@@ -112,6 +114,7 @@ public class RgInfoCommand implements CommandExecutor {
 		
 		config.getRegionRulesConf().getConfigurationSection("groups").createSection(groupName).set("region-ids", new ArrayList<String>());
 		config.savaRegionRulesConf();
+		sender.sendMessage(MessageFormat.format(Lang.SUCCESS_NEWGROUP.get(), groupName));
 	}
 
 	private void runDelGroupCmd(CommandSender sender, String[] args) throws IOException {
@@ -128,11 +131,13 @@ public class RgInfoCommand implements CommandExecutor {
 		
 		config.getRegionRulesConf().set("groups." + groupName, null);
 		config.savaRegionRulesConf();
+		sender.sendMessage(MessageFormat.format(Lang.SUCCESS_DELGROUP.get(), groupName));
 	}
 	
 	private void runAddRegionCmd(CommandSender sender, String[] args) throws IOException {
-		String groupName = args[1].toLowerCase();
-		String[] regionIDsToAdd = Arrays.copyOfRange(args, 2, args.length);
+		String groupName = args[1].toLowerCase(); // 기존에 있던것들
+		String[] regionIDsToAdd = Arrays.copyOfRange(args, 2, args.length); // 입력받은 것들
+		List<String> addedRegionIDs = new ArrayList<String>(); // 실제 추가된 것들
 		
 		if (!config.getRegionRulesConf().getConfigurationSection("groups").getKeys(false).contains(groupName)) {
 			sender.sendMessage(MessageFormat.format(Lang.GROUP_NOT_FOUND.get(), groupName));
@@ -148,15 +153,22 @@ public class RgInfoCommand implements CommandExecutor {
 				sender.sendMessage(MessageFormat.format(Lang.RG_SPECI_RULE_REMOVED.get(), eRgID));
 			}
 			// 중복확인 and add each region
-			if (!regionIDs.contains(eRgID)) regionIDs.add(eRgID);
+			if (!regionIDs.contains(eRgID)) {
+				regionIDs.add(eRgID);
+				addedRegionIDs.add(eRgID);
+			}
 		}
 		config.getRegionRulesConf().set("groups." + groupName + ".region-ids", regionIDs);
 		config.savaRegionRulesConf();
+		if (addedRegionIDs.size() == 0) sender.sendMessage(Lang.NOTHING_TO_ADD.get());
+		else if (addedRegionIDs.size() < 2) sender.sendMessage(MessageFormat.format(Lang.SUCCESS_ADDREGION.get(), addedRegionIDs.get(0), groupName));
+		else sender.sendMessage(MessageFormat.format(Lang.SUCCESS_ADDREGION_MULTI.get(), addedRegionIDs.get(0), (addedRegionIDs.size() - 1), groupName));
 	}
 	
 	private void runDelRegionCmd(CommandSender sender, String[] args) throws IOException {
-		String groupName = args[1].toLowerCase();
-		String[] regionIDsToDel = Arrays.copyOfRange(args, 2, args.length);
+		String groupName = args[1].toLowerCase(); // 기존에 있던것들
+		String[] regionIDsToDel = Arrays.copyOfRange(args, 2, args.length); // 입력받은 것들
+		List<String> deletedRegionIDs = new ArrayList<String>(); // 실제 삭제된 것들
 		
 		if (!config.getRegionRulesConf().getConfigurationSection("groups").getKeys(false).contains(groupName)) {
 			sender.sendMessage(MessageFormat.format(Lang.GROUP_NOT_FOUND.get(), groupName));
@@ -164,13 +176,21 @@ public class RgInfoCommand implements CommandExecutor {
 		}
 		
 		List<String> regionIDs = config.getRegionRulesConf().getStringList("groups." + groupName + ".region-ids");
-		regionIDs.removeAll(Arrays.asList(regionIDsToDel));
-		//TODO: 삭제할 region이 존재 안하는 경우 메시지
+		for (String eRgID : regionIDsToDel) {
+			// 존재확인 and delete each region
+			if (regionIDs.contains(eRgID)) {
+				regionIDs.remove(eRgID);
+				deletedRegionIDs.add(eRgID);
+			}
+		}
 		config.getRegionRulesConf().set("groups." + groupName + ".region-ids", regionIDs);
 		config.savaRegionRulesConf();
+		if (deletedRegionIDs.size() == 0) sender.sendMessage(Lang.NOTHING_TO_DEL.get());
+		else if (deletedRegionIDs.size() < 2) sender.sendMessage(MessageFormat.format(Lang.SUCCESS_DELREGION.get(), deletedRegionIDs.get(0), groupName));
+		else sender.sendMessage(MessageFormat.format(Lang.SUCCESS_DELREGION_MULTI.get(), deletedRegionIDs.get(0), (deletedRegionIDs.size() - 1), groupName));
 	}
 	
-	private void runGroupRuleCmd(String ruleName, CommandSender sender, String[] args) throws IOException {
+	private void runGroupRuleCmd(String ruleID, CommandSender sender, String[] args) throws IOException {
 		String groupName = args[1].toLowerCase();
 		String value = combineStrArr(Arrays.copyOfRange(args, 3, args.length));
 		
@@ -181,15 +201,18 @@ public class RgInfoCommand implements CommandExecutor {
 		
 		if (!value.equals("")) {
 			// Add
-			config.getRegionRulesConf().set("groups." + groupName + "." + ruleName, value);
+			config.getRegionRulesConf().set("groups." + groupName + "." + ruleID, value);
+			config.savaRegionRulesConf();
+			sender.sendMessage(Lang.SUCCESS_GROUPRULE.get());
 		} else {
 			// Remove
-			config.getRegionRulesConf().set("groups." + groupName + "." + ruleName, null);
+			config.getRegionRulesConf().set("groups." + groupName + "." + ruleID, null);
+			config.savaRegionRulesConf();
+			sender.sendMessage(Lang.SUCCESS_GROUPRULE_REM.get());
 		}
-		config.savaRegionRulesConf();
 	}
 	
-	private void runRuleCmd(String ruleName, CommandSender sender, String[] args) throws IOException {
+	private void runRuleCmd(String ruleID, CommandSender sender, String[] args) throws IOException {
 		String regionID = args[1].toLowerCase();
 		String value = combineStrArr(Arrays.copyOfRange(args, 3, args.length));
 		
@@ -201,13 +224,16 @@ public class RgInfoCommand implements CommandExecutor {
 				config.moveGroupRuleToRg(regionID, group);
 				sender.sendMessage(MessageFormat.format(Lang.RG_SPECI_RULE_MOVED.get(), regionID, group));
 			}
-			config.getRegionRulesConf().set("regions." + regionID + "." + ruleName, value);
+			config.getRegionRulesConf().set("regions." + regionID + "." + ruleID, value);
+			config.savaRegionRulesConf();
+			sender.sendMessage(Lang.SUCCESS_RULE.get());
 		} else {
 			// Remove
-			config.getRegionRulesConf().set("regions." + regionID + "." + ruleName, null);
+			config.getRegionRulesConf().set("regions." + regionID + "." + ruleID, null);
 			config.cleanupRgSpeciRule(regionID);
+			config.savaRegionRulesConf();
+			sender.sendMessage(Lang.SUCCESS_RULE_REM.get());
 		}
-		config.savaRegionRulesConf();
 	}
 
 	/**
