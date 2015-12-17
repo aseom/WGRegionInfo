@@ -10,7 +10,8 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
-
+import org.bukkit.entity.Player;
+import net.aseom.mc.wgregioninfo.config.PluginConfig;
 import net.aseom.mc.wgregioninfo.config.RegionRule;
 
 //TODO: "/regioninfo help" command
@@ -27,22 +28,56 @@ public class RgInfoCommand implements CommandExecutor {
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-		if (args.length == 0) return false;
-		try {
-			boolean firstArgVaild = cmdHandling(sender, args);
-			if (!firstArgVaild) return false; // Show "/regioninfo" usage
-		} catch (IOException e) {
-			sender.sendMessage(Lang.ERR_CANT_SAVE_CONFIG.get());
-			e.printStackTrace();
+		if (command.getName().equalsIgnoreCase("regionhud")) {
+			if (sender instanceof Player) {
+				try {
+					toggleRegionHUD((Player) sender);
+				} catch (IOException e) {
+					sender.sendMessage(Lang.ERR_CANT_SAVE_CONFIG.get());
+					e.printStackTrace();
+				}
+			} else {
+				sender.sendMessage(Lang.CANT_USE_CONSOLE.get());
+			}
+		} else if (command.getName().equalsIgnoreCase("regioninfo")) {
+			if (args.length == 0) return false;
+			try {
+				boolean firstArgVaild = regionInfoCmdHandling(sender, args);
+				if (!firstArgVaild) return false; // Show "/regioninfo" usage
+			} catch (IOException e) {
+				sender.sendMessage(Lang.ERR_CANT_SAVE_CONFIG.get());
+				e.printStackTrace();
+			}
 		}
 		return true;
 	}
 	
+	private void toggleRegionHUD(Player player) throws IOException {
+		PluginConfig pluginConfig = WGRegionInfo.plugin.getPluginConfigClass();
+		List<String> hudOffUsers = pluginConfig.getPluginConfig().getStringList("hud-off-users");
+		
+		if (hudOffUsers.contains(player.getName())) {
+			// On
+			hudOffUsers.remove(player.getName());
+			pluginConfig.getPluginConfig().set("hud-off-users", hudOffUsers);
+			pluginConfig.savaPluginConfig();
+			player.sendMessage("Region HUD On!");
+			WGRegionInfo.plugin.reloadHudBoard(player);
+		} else {
+			// Off
+			hudOffUsers.add(player.getName());
+			pluginConfig.getPluginConfig().set("hud-off-users", hudOffUsers);
+			pluginConfig.savaPluginConfig();
+			player.sendMessage("Region HUD Off!");
+			WGRegionInfo.plugin.reloadHudBoard(player);
+		}
+	}
+
 	/**
 	 * @return First argument vaild or unvaild
 	 * @throws IOException Config save fail
 	 */
-	public boolean cmdHandling(CommandSender sender, String[] args) throws IOException {
+	private boolean regionInfoCmdHandling(CommandSender sender, String[] args) throws IOException {
 		if (args[0].equalsIgnoreCase("newgroup")) {
 			//TODO: Check permission
 			if (args.length > 1) {
@@ -91,6 +126,15 @@ public class RgInfoCommand implements CommandExecutor {
 				sender.sendMessage(Lang.AVAILABLE_RULES.get());
 			} else {
 				runRuleCmd(args[2].toLowerCase(), sender, args);
+			}
+			return true;
+		} else if (args[0].equalsIgnoreCase("reload")) {
+			try {
+				WGRegionInfo.plugin.reloadPlugin();
+				sender.sendMessage(Lang.PLUGIN_RELOADED.get());
+			} catch (Exception e) {
+				sender.sendMessage(MessageFormat.format(Lang.ERROR_WHILE_RELOAD.get(), e.toString()));
+				e.printStackTrace();
 			}
 			return true;
 		} else if (args[0].equalsIgnoreCase("reload")) {

@@ -13,7 +13,8 @@ import net.aseom.mc.wgregioninfo.WGRegionInfo;
 public class PluginConfig {
 	private final String defaultConfig
 	= "language: ko-kr\r\n"
-	+ "enable-hud: true\r\n";
+	+ "enable-hud: true\r\n"
+	+ "hud-off-users: []";
 	private File configFile;
 	private YamlConfiguration config;
 	

@@ -2,6 +2,7 @@ package net.aseom.mc.wgregioninfo;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -25,9 +26,18 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 	private PluginConfig pluginConfig;
 	private RegionRule regionRule;
 	private WorldGuardPlugin worldGuardPlugin;
+	private Scoreboard currentHudBoard;
 	
 	public RegionRule getRegionRuleClass() {
 		return this.regionRule;
+	}
+
+	public PluginConfig getPluginConfigClass() {
+		return this.pluginConfig;
+	}
+
+	public Scoreboard getCurrentHudBoard() {
+		return this.currentHudBoard;
 	}
 
 	@Override
@@ -57,6 +67,7 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		
 		plugMgr.registerEvents(this, this);
 		getCommand("regioninfo").setExecutor(new RgInfoCommand());
+		getCommand("regionhud").setExecutor(new RgInfoCommand());
 		
 		this.regionRule = new RegionRule();
 		try {
@@ -72,10 +83,12 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 	public void onRegionEnter(RegionEnterEvent event) {
 		Player player = event.getPlayer();
 		ProtectedRegion region = event.getRegion();
+		YamlConfiguration pConf = pluginConfig.getPluginConfig();
 		
-		if (pluginConfig.getPluginConfig().getBoolean("enable-hud")) {
-			Scoreboard scoreBoard = getRegionInfoBoard(region);
-			player.setScoreboard(scoreBoard);
+		this.currentHudBoard = getHudBoard(region);
+		if (pConf.getBoolean("enable-hud")
+				&& !pConf.getStringList("hud-off-users").contains(player.getName())) {
+			player.setScoreboard(currentHudBoard);
 		}
 		
 		String greetTitle = regionRule.getRegionRule("greet-title", region.getId());
@@ -90,9 +103,10 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		Player player = event.getPlayer();
 		ProtectedRegion region = event.getRegion();
 		
-		if (pluginConfig.getPluginConfig().getBoolean("enable-hud")) {
+		if (currentHudBoard != null) {
 			Scoreboard blankBoard = Bukkit.getScoreboardManager().getNewScoreboard();
 			event.getPlayer().setScoreboard(blankBoard);
+			this.currentHudBoard = null;
 		}
 
 		String byeTitle = regionRule.getRegionRule("bye-title", region.getId());
@@ -102,7 +116,7 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		}
 	}
 	
-	public Scoreboard getRegionInfoBoard(ProtectedRegion region) {
+	public Scoreboard getHudBoard(ProtectedRegion region) {
 		String[] ownerName = getUsersName(region.getOwners());
 		String[] memberName = getUsersName(region.getMembers());
 		
@@ -126,7 +140,23 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 				scoreObj.getScore(" - " + eMember).setScore(score--);
 			}
 		}
+		scoreObj.getScore(ChatColor.GRAY + "________________").setScore(score--);
+		scoreObj.getScore(Lang.HUD_OFF.get()).setScore(score--);
 		return scoreBoard;
+	}
+	
+	public void reloadHudBoard(Player player) {
+		if (currentHudBoard == null) return;
+		YamlConfiguration pConf = pluginConfig.getPluginConfig();
+		if (pConf.getBoolean("enable-hud")
+				&& !pConf.getStringList("hud-off-users").contains(player.getName())) {
+			// 현재 로드되어 있는 HUD를 띄움
+			player.setScoreboard(currentHudBoard);
+		} else {
+			// 숨김
+			Scoreboard blankBoard = Bukkit.getScoreboardManager().getNewScoreboard();
+			player.setScoreboard(blankBoard);
+		}
 	}
 
 	public void sendTitleSubtitle(String byeTitle, String byeSubtitle, Player player) {
