@@ -19,7 +19,7 @@ import com.sk89q.worldguard.domains.DefaultDomain;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import net.aseom.mc.wgregioninfo.config.PluginConfig;
-import net.aseom.mc.wgregioninfo.config.RegionRule;
+import net.aseom.mc.wgregioninfo.config.RegionConfig;
 
 //TODO: "/regioninfo help" command
 //TODO: Permission support
@@ -27,12 +27,12 @@ import net.aseom.mc.wgregioninfo.config.RegionRule;
 public class WGRegionInfo extends JavaPlugin implements Listener {
 	public static WGRegionInfo plugin;
 	private PluginConfig pluginConfig;
-	private RegionRule regionRule;
+	private RegionConfig regionConfig;
 	private WorldGuardPlugin worldGuardPlugin;
 	private Scoreboard currentHudBoard;
 	
-	public RegionRule getRegionRuleClass() {
-		return this.regionRule;
+	public RegionConfig getRegionConfigClass() {
+		return this.regionConfig;
 	}
 
 	public PluginConfig getPluginConfigClass() {
@@ -72,9 +72,9 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		getCommand("regioninfo").setExecutor(new RgInfoCommand());
 		getCommand("regionhud").setExecutor(new RgInfoCommand());
 		
-		this.regionRule = new RegionRule();
+		this.regionConfig = new RegionConfig();
 		try {
-			regionRule.loadRegionRules();
+			regionConfig.loadRgConf();
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
@@ -94,10 +94,10 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 			player.setScoreboard(currentHudBoard);
 		}
 		
-		String greetTitle = regionRule.getRegionRule("greet-title", region.getId());
-		String greetSubtitle = regionRule.getRegionRule("greet-subtitle", region.getId());
-		if (greetTitle != null || greetSubtitle != null) {
-			sendTitleSubtitle(greetTitle, greetSubtitle, player);
+		String enterTitle = regionConfig.getRgConfValue("enter-title", region.getId());
+		String enterSubtitle = regionConfig.getRgConfValue("enter-subtitle", region.getId());
+		if (enterTitle != null || enterSubtitle != null) {
+			sendTitleSubtitle(enterTitle, enterSubtitle, player);
 		}
 	}
 	
@@ -112,10 +112,10 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 			this.currentHudBoard = null;
 		}
 
-		String byeTitle = regionRule.getRegionRule("bye-title", region.getId());
-		String byeSubtitle = regionRule.getRegionRule("bye-subtitle", region.getId());
-		if (byeTitle != null || byeSubtitle != null) {
-			sendTitleSubtitle(byeTitle, byeSubtitle, player);
+		String leaveTitle = regionConfig.getRgConfValue("leave-title", region.getId());
+		String leaveSubtitle = regionConfig.getRgConfValue("leave-subtitle", region.getId());
+		if (leaveTitle != null || leaveSubtitle != null) {
+			sendTitleSubtitle(leaveTitle, leaveSubtitle, player);
 		}
 	}
 
@@ -220,6 +220,6 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		if (!getDataFolder().exists()) getDataFolder().mkdirs();
 		pluginConfig.loadPluginConfig();
 		setPluginLanguage();
-		regionRule.loadRegionRules();
+		regionConfig.loadRgConf();
 	}
 }

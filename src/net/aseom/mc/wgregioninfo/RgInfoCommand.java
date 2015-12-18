@@ -12,13 +12,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import net.aseom.mc.wgregioninfo.config.PluginConfig;
-import net.aseom.mc.wgregioninfo.config.RegionRule;
+import net.aseom.mc.wgregioninfo.config.RegionConfig;
 
 public class RgInfoCommand implements CommandExecutor {
-	private RegionRule regionRule;
-	private final String[] availableRules = {
-		"greet-title", "greet-subtitle", "bye-title", "bye-subtitle"
-	};
+	private RegionConfig regionConfig;
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -36,8 +33,7 @@ public class RgInfoCommand implements CommandExecutor {
 		} else if (command.getName().equalsIgnoreCase("regioninfo")) {
 			if (args.length == 0) return false;
 			try {
-				boolean firstArgVaild = regionInfoCmdHandling(sender, args);
-				if (!firstArgVaild) return false; // Show "/regioninfo" usage
+				regionInfoCmdHandling(command, sender, args);
 			} catch (IOException e) {
 				sender.sendMessage(Lang.ERR_CANT_SAVE_CONFIG.get());
 				e.printStackTrace();
@@ -68,11 +64,10 @@ public class RgInfoCommand implements CommandExecutor {
 	}
 
 	/**
-	 * @return First argument vaild or unvaild
 	 * @throws IOException Config save fail
 	 */
-	private boolean regionInfoCmdHandling(CommandSender sender, String[] args) throws IOException {
-		this.regionRule = WGRegionInfo.plugin.getRegionRuleClass();
+	private void regionInfoCmdHandling(Command command, CommandSender sender, String[] args) throws IOException {
+		this.regionConfig = WGRegionInfo.plugin.getRegionConfigClass();
 		
 		if (args[0].equalsIgnoreCase("newgroup")) {
 			if (args.length > 1) {
@@ -80,44 +75,38 @@ public class RgInfoCommand implements CommandExecutor {
 			} else {
 				sender.sendMessage(Lang.USAGE_NEWGROUP.get());
 			}
-			return true;
 		} else if (args[0].equalsIgnoreCase("delgroup")) {
 			if (args.length > 1) {
 				runDelGroupCmd(sender, args);
 			} else {
 				sender.sendMessage(Lang.USAGE_DELGROUP.get());
 			}
-			return true;
 		} else if (args[0].equalsIgnoreCase("addregion")) {
 			if (args.length > 2) {
 				runAddRegionCmd(sender, args);
 			} else {
 				sender.sendMessage(Lang.USAGE_ADDREGION.get());
 			}
-			return true;
 		} else if (args[0].equalsIgnoreCase("delregion")) {
 			if (args.length > 2) {
 				runDelRegionCmd(sender, args);
 			} else {
 				sender.sendMessage(Lang.USAGE_DELREGION.get());
 			}
-			return true;
 		} else if (args[0].equalsIgnoreCase("grouprule")) {
-			if (args.length < 3 || !Arrays.asList(availableRules).contains(args[2])) {
+			if (args.length < 3 || !Arrays.asList(regionConfig.getAvailableRgConfs()).contains(args[2])) {
 				sender.sendMessage(Lang.USAGE_GROUPRULE.get());
 				sender.sendMessage(Lang.AVAILABLE_RULES.get());
 			} else {
 				runGroupRuleCmd(args[2].toLowerCase(), sender, args);
 			}
-			return true;
 		} else if (args[0].equalsIgnoreCase("rule")) {
-			if (args.length < 3 || !Arrays.asList(availableRules).contains(args[2])) {
+			if (args.length < 3 || !Arrays.asList(regionConfig.getAvailableRgConfs()).contains(args[2])) {
 				sender.sendMessage(Lang.USAGE_RULE.get());
 				sender.sendMessage(Lang.AVAILABLE_RULES.get());
 			} else {
 				runRuleCmd(sender, args);
 			}
-			return true;
 		} else if (args[0].equalsIgnoreCase("reload")) {
 			try {
 				WGRegionInfo.plugin.reloadPlugin();
@@ -126,9 +115,8 @@ public class RgInfoCommand implements CommandExecutor {
 				sender.sendMessage(MessageFormat.format(Lang.ERROR_WHILE_RELOAD.get(), e.toString()));
 				e.printStackTrace();
 			}
-			return true;
 		} else {
-			return false;
+			sender.sendMessage(command.getUsage());
 		}
 	}
 
@@ -140,8 +128,8 @@ public class RgInfoCommand implements CommandExecutor {
 			return;
 		}
 		
-		regionRule.getRegionRulesConf().getConfigurationSection("groups").createSection(groupName).set("region-ids", new ArrayList<String>());
-		regionRule.savaRegionRulesConf();
+		regionConfig.getRgYmlConf().getConfigurationSection("groups").createSection(groupName).set("region-ids", new ArrayList<String>());
+		regionConfig.savaRgConf();
 		sender.sendMessage(MessageFormat.format(Lang.SUCCESS_NEWGROUP.get(), groupName));
 	}
 
@@ -152,13 +140,13 @@ public class RgInfoCommand implements CommandExecutor {
 			sender.sendMessage(Lang.GROUPNAME_CANT_SPACE.get());
 			return;
 		}
-		if (!regionRule.getRegionRulesConf().getConfigurationSection("groups").getKeys(false).contains(groupName)) {
+		if (!regionConfig.getRgYmlConf().getConfigurationSection("groups").getKeys(false).contains(groupName)) {
 			sender.sendMessage(MessageFormat.format(Lang.GROUP_NOT_FOUND.get(), groupName));
 			return;
 		}
 		
-		regionRule.getRegionRulesConf().set("groups." + groupName, null);
-		regionRule.savaRegionRulesConf();
+		regionConfig.getRgYmlConf().set("groups." + groupName, null);
+		regionConfig.savaRgConf();
 		sender.sendMessage(MessageFormat.format(Lang.SUCCESS_DELGROUP.get(), groupName));
 	}
 	
@@ -167,18 +155,18 @@ public class RgInfoCommand implements CommandExecutor {
 		String[] regionIDsToAdd = Arrays.copyOfRange(args, 2, args.length); // 입력받은 것들
 		List<String> addedRegionIDs = new ArrayList<String>(); // 실제 추가된 것들
 		
-		if (!regionRule.getRegionRulesConf().getConfigurationSection("groups").getKeys(false).contains(groupName)) {
+		if (!regionConfig.getRgYmlConf().getConfigurationSection("groups").getKeys(false).contains(groupName)) {
 			sender.sendMessage(MessageFormat.format(Lang.GROUP_NOT_FOUND.get(), groupName));
 			return;
 		}
 		
-		List<String> regionIDs = regionRule.getRegionRulesConf().getStringList("groups." + groupName + ".region-ids");
+		List<String> regionIDs = regionConfig.getRgYmlConf().getStringList("groups." + groupName + ".region-ids");
 		for (String eRgID : regionIDsToAdd) {
 			// 그룹에 추가하려는 each region이 region specific rule을 갖고있으면 remove
-			ConfigurationSection rgSpecificCfg = regionRule.getRegionRulesConf().getConfigurationSection("regions." + eRgID);
+			ConfigurationSection rgSpecificCfg = regionConfig.getRgYmlConf().getConfigurationSection("regions." + eRgID);
 			if (rgSpecificCfg != null) {
-				regionRule.getRegionRulesConf().set("regions." + eRgID, null);
-				sender.sendMessage(MessageFormat.format(Lang.RG_SPECI_RULE_REMOVED.get(), eRgID));
+				regionConfig.getRgYmlConf().set("regions." + eRgID, null);
+				sender.sendMessage(MessageFormat.format(Lang.RG_SPECI_CONF_REMOVED.get(), eRgID));
 			}
 			// 중복확인 and add each region
 			if (!regionIDs.contains(eRgID)) {
@@ -186,8 +174,8 @@ public class RgInfoCommand implements CommandExecutor {
 				addedRegionIDs.add(eRgID);
 			}
 		}
-		regionRule.getRegionRulesConf().set("groups." + groupName + ".region-ids", regionIDs);
-		regionRule.savaRegionRulesConf();
+		regionConfig.getRgYmlConf().set("groups." + groupName + ".region-ids", regionIDs);
+		regionConfig.savaRgConf();
 		if (addedRegionIDs.size() == 0) sender.sendMessage(Lang.NOTHING_TO_ADD.get());
 		else if (addedRegionIDs.size() < 2) sender.sendMessage(MessageFormat.format(Lang.SUCCESS_ADDREGION.get(), addedRegionIDs.get(0), groupName));
 		else sender.sendMessage(MessageFormat.format(Lang.SUCCESS_ADDREGION_MULTI.get(), addedRegionIDs.get(0), (addedRegionIDs.size() - 1), groupName));
@@ -198,12 +186,12 @@ public class RgInfoCommand implements CommandExecutor {
 		String[] regionIDsToDel = Arrays.copyOfRange(args, 2, args.length); // 입력받은 것들
 		List<String> deletedRegionIDs = new ArrayList<String>(); // 실제 삭제된 것들
 		
-		if (!regionRule.getRegionRulesConf().getConfigurationSection("groups").getKeys(false).contains(groupName)) {
+		if (!regionConfig.getRgYmlConf().getConfigurationSection("groups").getKeys(false).contains(groupName)) {
 			sender.sendMessage(MessageFormat.format(Lang.GROUP_NOT_FOUND.get(), groupName));
 			return;
 		}
 		
-		List<String> regionIDs = regionRule.getRegionRulesConf().getStringList("groups." + groupName + ".region-ids");
+		List<String> regionIDs = regionConfig.getRgYmlConf().getStringList("groups." + groupName + ".region-ids");
 		for (String eRgID : regionIDsToDel) {
 			// 존재확인 and delete each region
 			if (regionIDs.contains(eRgID)) {
@@ -211,8 +199,8 @@ public class RgInfoCommand implements CommandExecutor {
 				deletedRegionIDs.add(eRgID);
 			}
 		}
-		regionRule.getRegionRulesConf().set("groups." + groupName + ".region-ids", regionIDs);
-		regionRule.savaRegionRulesConf();
+		regionConfig.getRgYmlConf().set("groups." + groupName + ".region-ids", regionIDs);
+		regionConfig.savaRgConf();
 		if (deletedRegionIDs.size() == 0) sender.sendMessage(Lang.NOTHING_TO_DEL.get());
 		else if (deletedRegionIDs.size() < 2) sender.sendMessage(MessageFormat.format(Lang.SUCCESS_DELREGION.get(), deletedRegionIDs.get(0), groupName));
 		else sender.sendMessage(MessageFormat.format(Lang.SUCCESS_DELREGION_MULTI.get(), deletedRegionIDs.get(0), (deletedRegionIDs.size() - 1), groupName));
@@ -222,20 +210,20 @@ public class RgInfoCommand implements CommandExecutor {
 		String groupName = args[1].toLowerCase();
 		String value = combineStrArr(Arrays.copyOfRange(args, 3, args.length));
 		
-		if (!regionRule.getRegionRulesConf().getConfigurationSection("groups").getKeys(false).contains(groupName)) {
+		if (!regionConfig.getRgYmlConf().getConfigurationSection("groups").getKeys(false).contains(groupName)) {
 			sender.sendMessage(MessageFormat.format(Lang.GROUP_NOT_FOUND.get(), groupName));
 			return;
 		}
 		
 		if (!value.equals("")) {
 			// Add
-			regionRule.getRegionRulesConf().set("groups." + groupName + "." + ruleID, value);
-			regionRule.savaRegionRulesConf();
+			regionConfig.getRgYmlConf().set("groups." + groupName + "." + ruleID, value);
+			regionConfig.savaRgConf();
 			sender.sendMessage(Lang.SUCCESS_GROUPRULE.get());
 		} else {
 			// Remove
-			regionRule.getRegionRulesConf().set("groups." + groupName + "." + ruleID, null);
-			regionRule.savaRegionRulesConf();
+			regionConfig.getRgYmlConf().set("groups." + groupName + "." + ruleID, null);
+			regionConfig.savaRgConf();
 			sender.sendMessage(Lang.SUCCESS_GROUPRULE_REM.get());
 		}
 	}
@@ -248,19 +236,19 @@ public class RgInfoCommand implements CommandExecutor {
 		if (!value.equals("")) {
 			// Add
 			// The region exists in group rule, move to region rule
-			String group = regionRule.getGroup(regionID);
+			String group = regionConfig.getGroup(regionID);
 			if (group != null) {
-				regionRule.moveGroupRuleToRg(regionID, group);
-				sender.sendMessage(MessageFormat.format(Lang.RG_SPECI_RULE_MOVED.get(), regionID, group));
+				regionConfig.moveGroupConfToRg(regionID, group);
+				sender.sendMessage(MessageFormat.format(Lang.RG_SPECI_CONF_MOVED.get(), regionID, group));
 			}
-			regionRule.getRegionRulesConf().set("regions." + regionID + "." + ruleID, value);
-			regionRule.savaRegionRulesConf();
+			regionConfig.getRgYmlConf().set("regions." + regionID + "." + ruleID, value);
+			regionConfig.savaRgConf();
 			sender.sendMessage(Lang.SUCCESS_RULE.get());
 		} else {
 			// Remove
-			regionRule.getRegionRulesConf().set("regions." + regionID + "." + ruleID, null);
-			regionRule.cleanupRgSpeciRule(regionID);
-			regionRule.savaRegionRulesConf();
+			regionConfig.getRgYmlConf().set("regions." + regionID + "." + ruleID, null);
+			regionConfig.cleanupRgSpeciConf(regionID);
+			regionConfig.savaRgConf();
 			sender.sendMessage(Lang.SUCCESS_RULE_REM.get());
 		}
 	}

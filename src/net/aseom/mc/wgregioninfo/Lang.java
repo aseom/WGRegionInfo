@@ -35,8 +35,8 @@ public enum Lang {
 	ERR_CANT_SAVE_CONFIG("err-cant-save-config"),
 	GROUP_NOT_FOUND("group-not-found"),
 	GROUPNAME_CANT_SPACE("groupname-cant-space"),
-	RG_SPECI_RULE_REMOVED("rg-speci-rule-removed"),
-	RG_SPECI_RULE_MOVED("rg-speci-rule-moved"),
+	RG_SPECI_CONF_REMOVED("rg-speci-conf-removed"),
+	RG_SPECI_CONF_MOVED("rg-speci-conf-moved"),
 	PLUGIN_RELOADED("plugin-reloaded"),
 	ERROR_WHILE_RELOAD("error-while-reload");
 	
