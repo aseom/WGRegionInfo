@@ -19,6 +19,8 @@ public class RgInfoCommand implements CommandExecutor {
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+		this.regionConfig = WGRegionInfo.plugin.getRegionConfigClass();
+		
 		if (command.getName().equalsIgnoreCase("regionhud")) {
 			if (sender instanceof Player) {
 				try {
@@ -33,7 +35,11 @@ public class RgInfoCommand implements CommandExecutor {
 		} else if (command.getName().equalsIgnoreCase("regioninfo")) {
 			if (args.length == 0) return false;
 			try {
-				regionInfoCmdHandling(command, sender, args);
+				if (Arrays.asList(regionConfig.getAvailableRgConfs()).contains(args[0])) {
+					runRgConfCmd(sender, args);
+				} else {
+					regionInfoCmdHandling(command, sender, args);
+				}
 			} catch (IOException e) {
 				sender.sendMessage(Lang.ERR_CANT_SAVE_CONFIG.get());
 				e.printStackTrace();
@@ -62,13 +68,77 @@ public class RgInfoCommand implements CommandExecutor {
 			WGRegionInfo.plugin.reloadHudBoard(player);
 		}
 	}
+	
+	/* Begin region config commands handling */
+	
+	private void runRgConfCmd(CommandSender sender, String[] args) throws IOException {
+		if (args.length < 2) {
+			sender.sendMessage(MessageFormat.format(Lang.USAGE_REGIONCONF.get(), args[0]));
+			return;
+		}
+		
+		String rgOrGrpName = args[1].toLowerCase();
+		String confId = args[0];
+		String value = combineStrArr(Arrays.copyOfRange(args, 2, args.length));
+		
+		if (rgOrGrpName.startsWith("g:")) {
+			// Group specific config
+			String grpName = rgOrGrpName.substring(2);
+			setGrpSpeciConf(grpName, confId, value, sender);
+		} else {
+			// Region specific config
+			String rgId = rgOrGrpName;
+			setRgSpeciConf(rgId, confId, value, sender);
+		}
+	}
+	
+	private void setGrpSpeciConf(String grpName, String confId, String value, CommandSender sender) throws IOException {
+		if (!regionConfig.getRgYmlConf().getConfigurationSection("groups").getKeys(false).contains(grpName)) {
+			sender.sendMessage(MessageFormat.format(Lang.GROUP_NOT_FOUND.get(), grpName));
+			return;
+		}
+		
+		if (!value.equals("")) {
+			// Add
+			regionConfig.getRgYmlConf().set("groups." + grpName + "." + confId, value);
+			regionConfig.savaRgConf();
+			sender.sendMessage(Lang.SUCCESS_GROUPCONF.get());
+		} else {
+			// Remove
+			regionConfig.getRgYmlConf().set("groups." + grpName + "." + confId, null);
+			regionConfig.savaRgConf();
+			sender.sendMessage(Lang.SUCCESS_GROUPCONF_REM.get());
+		}
+	}
+	
+	private void setRgSpeciConf(String rgId, String confId, String value, CommandSender sender) throws IOException {
+		if (!value.equals("")) {
+			// Add
+			// The region exists in group rule, move to region rule
+			String group = regionConfig.getGroup(rgId);
+			if (group != null) {
+				regionConfig.moveGroupConfToRg(rgId, group);
+				sender.sendMessage(MessageFormat.format(Lang.RG_SPECI_CONF_MOVED.get(), rgId, group));
+			}
+			regionConfig.getRgYmlConf().set("regions." + rgId + "." + confId, value);
+			regionConfig.savaRgConf();
+			sender.sendMessage(Lang.SUCCESS_REGIONCONF.get());
+		} else {
+			// Remove
+			regionConfig.getRgYmlConf().set("regions." + rgId + "." + confId, null);
+			regionConfig.cleanupRgSpeciConf(rgId);
+			regionConfig.savaRgConf();
+			sender.sendMessage(Lang.SUCCESS_REGIONCONF_REM.get());
+		}
+	}
+
+	/* End region config commands handling */
 
 	/**
+	 * Command handling (except '/rghud' & region config commands)
 	 * @throws IOException Config save fail
 	 */
 	private void regionInfoCmdHandling(Command command, CommandSender sender, String[] args) throws IOException {
-		this.regionConfig = WGRegionInfo.plugin.getRegionConfigClass();
-		
 		if (args[0].equalsIgnoreCase("newgroup")) {
 			if (args.length > 1) {
 				runNewGroupCmd(sender, args);
@@ -92,20 +162,6 @@ public class RgInfoCommand implements CommandExecutor {
 				runDelRegionCmd(sender, args);
 			} else {
 				sender.sendMessage(Lang.USAGE_DELREGION.get());
-			}
-		} else if (args[0].equalsIgnoreCase("grouprule")) {
-			if (args.length < 3 || !Arrays.asList(regionConfig.getAvailableRgConfs()).contains(args[2])) {
-				sender.sendMessage(Lang.USAGE_GROUPRULE.get());
-				sender.sendMessage(Lang.AVAILABLE_RULES.get());
-			} else {
-				runGroupRuleCmd(args[2].toLowerCase(), sender, args);
-			}
-		} else if (args[0].equalsIgnoreCase("rule")) {
-			if (args.length < 3 || !Arrays.asList(regionConfig.getAvailableRgConfs()).contains(args[2])) {
-				sender.sendMessage(Lang.USAGE_RULE.get());
-				sender.sendMessage(Lang.AVAILABLE_RULES.get());
-			} else {
-				runRuleCmd(sender, args);
 			}
 		} else if (args[0].equalsIgnoreCase("reload")) {
 			try {
@@ -204,53 +260,6 @@ public class RgInfoCommand implements CommandExecutor {
 		if (deletedRegionIDs.size() == 0) sender.sendMessage(Lang.NOTHING_TO_DEL.get());
 		else if (deletedRegionIDs.size() < 2) sender.sendMessage(MessageFormat.format(Lang.SUCCESS_DELREGION.get(), deletedRegionIDs.get(0), groupName));
 		else sender.sendMessage(MessageFormat.format(Lang.SUCCESS_DELREGION_MULTI.get(), deletedRegionIDs.get(0), (deletedRegionIDs.size() - 1), groupName));
-	}
-	
-	private void runGroupRuleCmd(String ruleID, CommandSender sender, String[] args) throws IOException {
-		String groupName = args[1].toLowerCase();
-		String value = combineStrArr(Arrays.copyOfRange(args, 3, args.length));
-		
-		if (!regionConfig.getRgYmlConf().getConfigurationSection("groups").getKeys(false).contains(groupName)) {
-			sender.sendMessage(MessageFormat.format(Lang.GROUP_NOT_FOUND.get(), groupName));
-			return;
-		}
-		
-		if (!value.equals("")) {
-			// Add
-			regionConfig.getRgYmlConf().set("groups." + groupName + "." + ruleID, value);
-			regionConfig.savaRgConf();
-			sender.sendMessage(Lang.SUCCESS_GROUPRULE.get());
-		} else {
-			// Remove
-			regionConfig.getRgYmlConf().set("groups." + groupName + "." + ruleID, null);
-			regionConfig.savaRgConf();
-			sender.sendMessage(Lang.SUCCESS_GROUPRULE_REM.get());
-		}
-	}
-	
-	private void runRuleCmd(CommandSender sender, String[] args) throws IOException {
-		String regionID = args[1].toLowerCase();
-		String ruleID = args[2].toLowerCase();
-		String value = combineStrArr(Arrays.copyOfRange(args, 3, args.length));
-		
-		if (!value.equals("")) {
-			// Add
-			// The region exists in group rule, move to region rule
-			String group = regionConfig.getGroup(regionID);
-			if (group != null) {
-				regionConfig.moveGroupConfToRg(regionID, group);
-				sender.sendMessage(MessageFormat.format(Lang.RG_SPECI_CONF_MOVED.get(), regionID, group));
-			}
-			regionConfig.getRgYmlConf().set("regions." + regionID + "." + ruleID, value);
-			regionConfig.savaRgConf();
-			sender.sendMessage(Lang.SUCCESS_RULE.get());
-		} else {
-			// Remove
-			regionConfig.getRgYmlConf().set("regions." + regionID + "." + ruleID, null);
-			regionConfig.cleanupRgSpeciConf(regionID);
-			regionConfig.savaRgConf();
-			sender.sendMessage(Lang.SUCCESS_RULE_REM.get());
-		}
 	}
 
 	/**

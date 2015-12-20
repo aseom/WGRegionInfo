@@ -21,9 +21,6 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import net.aseom.mc.wgregioninfo.config.PluginConfig;
 import net.aseom.mc.wgregioninfo.config.RegionConfig;
 
-//TODO: "/regioninfo help" command
-//TODO: Permission support
-
 public class WGRegionInfo extends JavaPlugin implements Listener {
 	public static WGRegionInfo plugin;
 	private PluginConfig pluginConfig;
