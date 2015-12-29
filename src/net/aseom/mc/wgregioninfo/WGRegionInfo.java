@@ -50,7 +50,7 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		setPluginLanguage();
+		Lang.loadLang("ko-kr");
 		
 		PluginManager plugMgr = getServer().getPluginManager();
 		this.worldGuardPlugin = (WorldGuardPlugin) plugMgr.getPlugin("WorldGuard");
@@ -195,19 +195,6 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		if (owners.length() == 0) return null;
 		return owners.replace("name:", "").toLowerCase().split(", ");
 	}
-
-	/**
-	 * Get language config and set plugin language 
-	 */
-	public void setPluginLanguage() {
-		String language = pluginConfig.getPluginConfig().getString("language");
-		if (!language.matches("en-us|ko-kr")) {
-			getLogger().warning("Language " + language + " is unvaild. Loading en-us...");
-			Lang.loadLang("en-us");
-			return;
-		}
-		Lang.loadLang(language);
-	}
 	
 	/**
 	 * Reload all configs
@@ -216,7 +203,6 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 	public void reloadPlugin() throws Exception {
 		if (!getDataFolder().exists()) getDataFolder().mkdirs();
 		pluginConfig.loadPluginConfig();
-		setPluginLanguage();
 		regionConfig.loadRgConf();
 	}
 }
