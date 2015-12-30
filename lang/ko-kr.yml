@@ -20,6 +20,7 @@ success-delregion-multi: "''{0}'' 외 {1}개의 영역을 ''{2}'' 그룹에서 �
 nothing-to-add: "새롭게 추가할 것이 없습니다."
 nothing-to-del: "삭제할 것이 없습니다."
 cant-use-console: "콘솔에서 사용할 수 없는 명령어입니다!"
+no-permission: "&c해당 명령어를 사용할 권한이 없습니다!"
 err-cant-save-config: "오류: 설정 저장에 실패했습니다."
 group-not-found: "''{0}''는 존재하지 않는 그룹입니다."
 groupname-cant-space: "그룹 이름에 띄어쓰기를 사용할 수 없습니다."

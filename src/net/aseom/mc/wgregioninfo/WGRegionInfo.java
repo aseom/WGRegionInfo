@@ -86,15 +86,18 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 		YamlConfiguration pConf = pluginConfig.getPluginConfig();
 		
 		this.currentHudBoard = getHudBoard(region);
-		if (pConf.getBoolean("enable-hud")
+		if (player.hasPermission("rginfo.viewhud")
+				&& pConf.getBoolean("enable-hud")
 				&& !pConf.getStringList("hud-off-users").contains(player.getName())) {
 			player.setScoreboard(currentHudBoard);
 		}
 		
-		String enterTitle = regionConfig.getRgConfValue("enter-title", region.getId());
-		String enterSubtitle = regionConfig.getRgConfValue("enter-subtitle", region.getId());
-		if (enterTitle != null || enterSubtitle != null) {
-			sendTitleSubtitle(enterTitle, enterSubtitle, player);
+		if (player.hasPermission("rginfo.viewtitle")) {
+			String enterTitle = regionConfig.getRgConfValue("enter-title", region.getId());
+			String enterSubtitle = regionConfig.getRgConfValue("enter-subtitle", region.getId());
+			if (enterTitle != null || enterSubtitle != null) {
+				sendTitleSubtitle(enterTitle, enterSubtitle, player);
+			}
 		}
 	}
 	
@@ -109,10 +112,12 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 			this.currentHudBoard = null;
 		}
 
-		String leaveTitle = regionConfig.getRgConfValue("leave-title", region.getId());
-		String leaveSubtitle = regionConfig.getRgConfValue("leave-subtitle", region.getId());
-		if (leaveTitle != null || leaveSubtitle != null) {
-			sendTitleSubtitle(leaveTitle, leaveSubtitle, player);
+		if (player.hasPermission("rginfo.viewtitle")) {
+			String leaveTitle = regionConfig.getRgConfValue("leave-title", region.getId());
+			String leaveSubtitle = regionConfig.getRgConfValue("leave-subtitle", region.getId());
+			if (leaveTitle != null || leaveSubtitle != null) {
+				sendTitleSubtitle(leaveTitle, leaveSubtitle, player);
+			}
 		}
 	}
 

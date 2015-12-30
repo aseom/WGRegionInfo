@@ -30,6 +30,7 @@ public enum Lang {
 	NOTHING_TO_ADD("nothing-to-add"),
 	NOTHING_TO_DEL("nothing-to-del"),
 	CANT_USE_CONSOLE("cant-use-console"),
+	NO_PERMISSION("no-permission"),
 	ERR_CANT_SAVE_CONFIG("err-cant-save-config"),
 	GROUP_NOT_FOUND("group-not-found"),
 	GROUPNAME_CANT_SPACE("groupname-cant-space"),

@@ -49,6 +49,11 @@ public class RgInfoCommand implements CommandExecutor {
 	}
 	
 	public void toggleRegionHUD(Player player) throws IOException {
+		if (!player.hasPermission("rginfo.togglehud")) {
+			player.sendMessage(Lang.NO_PERMISSION.get());
+			return;
+		}
+		
 		PluginConfig pluginConfig = WGRegionInfo.plugin.getPluginConfigClass();
 		List<String> hudOffUsers = pluginConfig.getPluginConfig().getStringList("hud-off-users");
 		
@@ -72,6 +77,10 @@ public class RgInfoCommand implements CommandExecutor {
 	/* Begin region config commands handling */
 	
 	private void runRgConfCmd(CommandSender sender, String[] args) throws IOException {
+		if (!sender.hasPermission("rginfo.modify")) {
+			sender.sendMessage(Lang.NO_PERMISSION.get());
+			return;
+		}
 		if (args.length < 2) {
 			sender.sendMessage(MessageFormat.format(Lang.USAGE_REGIONCONF.get(), args[0]));
 			return;
@@ -140,30 +149,50 @@ public class RgInfoCommand implements CommandExecutor {
 	 */
 	private void regionInfoCmdHandling(Command command, CommandSender sender, String[] args) throws IOException {
 		if (args[0].equalsIgnoreCase("newgroup")) {
+			if (!sender.hasPermission("rginfo.modify")) {
+				sender.sendMessage(Lang.NO_PERMISSION.get());
+				return;
+			}
 			if (args.length > 1) {
 				runNewGroupCmd(sender, args);
 			} else {
 				sender.sendMessage(Lang.USAGE_NEWGROUP.get());
 			}
 		} else if (args[0].equalsIgnoreCase("delgroup")) {
+			if (!sender.hasPermission("rginfo.modify")) {
+				sender.sendMessage(Lang.NO_PERMISSION.get());
+				return;
+			}
 			if (args.length > 1) {
 				runDelGroupCmd(sender, args);
 			} else {
 				sender.sendMessage(Lang.USAGE_DELGROUP.get());
 			}
 		} else if (args[0].equalsIgnoreCase("addregion")) {
+			if (!sender.hasPermission("rginfo.modify")) {
+				sender.sendMessage(Lang.NO_PERMISSION.get());
+				return;
+			}
 			if (args.length > 2) {
 				runAddRegionCmd(sender, args);
 			} else {
 				sender.sendMessage(Lang.USAGE_ADDREGION.get());
 			}
 		} else if (args[0].equalsIgnoreCase("delregion")) {
+			if (!sender.hasPermission("rginfo.modify")) {
+				sender.sendMessage(Lang.NO_PERMISSION.get());
+				return;
+			}
 			if (args.length > 2) {
 				runDelRegionCmd(sender, args);
 			} else {
 				sender.sendMessage(Lang.USAGE_DELREGION.get());
 			}
 		} else if (args[0].equalsIgnoreCase("reload")) {
+			if (!sender.hasPermission("rginfo.reload")) {
+				sender.sendMessage(Lang.NO_PERMISSION.get());
+				return;
+			}
 			try {
 				WGRegionInfo.plugin.reloadPlugin();
 				sender.sendMessage(Lang.PLUGIN_RELOADED.get());
