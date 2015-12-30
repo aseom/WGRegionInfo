@@ -1,13 +1,13 @@
 name: WGRegionInfo
 main: net.aseom.mc.wgregioninfo.WGRegionInfo
-version: 0.1-alpha
+version: 1.0
 softdepend: [WorldGuard, WGRegionEvents]
 
 commands:
   regioninfo:
     aliases: [rginfo, rgi]
     description: "RegionInfo command."
-    usage: "Wrong command."
+    usage: "Usage: '/rginfo enter-title, enter-subtitle, leave-title, leave-subtitle, newgroup, delgroup, addregion, delregion, reload'"
   regionhud:
     aliases: [rghud, rgh]
     description: "Toggle RegionInfo HUD."

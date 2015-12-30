@@ -76,7 +76,7 @@ public class WGRegionInfo extends JavaPlugin implements Listener {
 			e1.printStackTrace();
 		}
 		
-		getServer().getConsoleSender().sendMessage(Lang.PLUGIN_ENABLED.get());
+		getLogger().info(Lang.PLUGIN_ENABLED.get());
 	}
 	
 	@EventHandler
